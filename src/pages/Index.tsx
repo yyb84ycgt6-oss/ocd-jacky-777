@@ -36,6 +36,8 @@ const Sidebar = ({
   onSignOut,
   userEmail,
   coreFiles,
+  isMobileOpen,
+  onCloseMobile,
 }: {
   conversations: Conversation[];
   activeId: string | null;
@@ -45,87 +47,118 @@ const Sidebar = ({
   onSignOut: () => void;
   userEmail: string;
   coreFiles: string[];
-}) => (
-  <aside className="w-[280px] min-h-screen border-r border-border bg-sidebar flex-col hidden md:flex data-[mobile=true]:flex data-[mobile=true]:fixed data-[mobile=true]:inset-0 data-[mobile=true]:z-50 data-[mobile=true]:w-full data-[mobile=true]:border-r-0" data-mobile={false}>
-    <div className="p-4 border-b border-border">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-lg font-bold text-primary tracking-wider">J</span>
-          <span className="font-mono text-xs uppercase tracking-widest text-sidebar-foreground">
-            Jackie
-          </span>
-        </div>
-        <button
-          onClick={onNew}
-          className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary btn-mechanical transition-colors duration-150"
-          title="New conversation"
-        >
-          <Plus size={14} />
-        </button>
-      </div>
-    </div>
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}) => {
+  const handleSelect = (id: string) => {
+    onSelect(id);
+    onCloseMobile?.();
+  };
 
-    <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-      <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        Conversations
-      </div>
-      {conversations.length === 0 && (
-        <div className="px-2 py-2 text-xs text-muted-foreground">No conversations yet.</div>
+  return (
+    <>
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={onCloseMobile} />
       )}
-      {conversations.map((conv) => (
-        <div
-          key={conv.id}
-          className={`group flex items-center gap-1 rounded-sm transition-colors duration-150 ${
-            activeId === conv.id
-              ? "bg-secondary text-foreground"
-              : "text-sidebar-foreground hover:bg-secondary/50"
-          }`}
-        >
-          <button
-            onClick={() => onSelect(conv.id)}
-            className="flex-1 text-left px-2 py-1.5 font-mono text-xs truncate btn-mechanical flex items-center gap-2"
-          >
-            <MessageSquare size={12} className="flex-shrink-0 text-muted-foreground" />
-            {conv.title}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(conv.id);
-            }}
-            className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-destructive transition-opacity duration-150"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      ))}
-    </div>
-
-    <div className="p-2 border-t border-border space-y-0.5">
-      <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        Core
-      </div>
-      {coreFiles.map((file) => (
-        <div key={file} className="px-2 py-1 font-mono text-[11px] text-muted-foreground truncate">
-          {file}
-        </div>
-      ))}
-    </div>
-
-    <div className="p-4 border-t border-border space-y-2">
-      <div className="font-mono text-[10px] text-muted-foreground truncate" title={userEmail}>
-        {userEmail}
-      </div>
-      <button
-        onClick={onSignOut}
-        className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+      <aside
+        className={`
+          w-[280px] min-h-screen border-r border-border bg-sidebar flex-col
+          hidden md:flex
+          ${isMobileOpen ? "!flex fixed inset-y-0 left-0 z-50" : ""}
+        `}
       >
-        <LogOut size={10} />
-        Sign Out
-      </button>
-    </div>
-  </aside>
-);
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-lg font-bold text-primary tracking-wider">J</span>
+              <span className="font-mono text-xs uppercase tracking-widest text-sidebar-foreground">
+                Jackie
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onNew}
+                className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary btn-mechanical transition-colors duration-150"
+                title="New conversation"
+              >
+                <Plus size={14} />
+              </button>
+              {isMobileOpen && (
+                <button
+                  onClick={onCloseMobile}
+                  className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary btn-mechanical transition-colors duration-150 md:hidden"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Conversations
+          </div>
+          {conversations.length === 0 && (
+            <div className="px-2 py-2 text-xs text-muted-foreground">No conversations yet.</div>
+          )}
+          {conversations.map((conv) => (
+            <div
+              key={conv.id}
+              className={`group flex items-center gap-1 rounded-sm transition-colors duration-150 ${
+                activeId === conv.id
+                  ? "bg-secondary text-foreground"
+                  : "text-sidebar-foreground hover:bg-secondary/50"
+              }`}
+            >
+              <button
+                onClick={() => handleSelect(conv.id)}
+                className="flex-1 text-left px-2 py-1.5 font-mono text-xs truncate btn-mechanical flex items-center gap-2"
+              >
+                <MessageSquare size={12} className="flex-shrink-0 text-muted-foreground" />
+                {conv.title}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(conv.id);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-destructive transition-opacity duration-150"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-2 border-t border-border space-y-0.5">
+          <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Core
+          </div>
+          {coreFiles.map((file) => (
+            <div key={file} className="px-2 py-1 font-mono text-[11px] text-muted-foreground truncate">
+              {file}
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 border-t border-border space-y-2">
+          <div className="font-mono text-[10px] text-muted-foreground truncate" title={userEmail}>
+            {userEmail}
+          </div>
+          <button
+            onClick={onSignOut}
+            className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+          >
+            <LogOut size={10} />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+};
 
 // ─── Memory Dots ───────────────────────────────────────────
 
