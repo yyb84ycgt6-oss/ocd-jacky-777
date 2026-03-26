@@ -10,11 +10,11 @@ import {
   generateTitle,
   updateConversationTitle,
   type Conversation,
-  type StoredMessage,
 } from "@/lib/jackie-db";
 import { detectSecurityFlag, detectMemoryTier } from "@/lib/jackie-security";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Plus, Trash2, MessageSquare } from "lucide-react";
+import { Plus, Trash2, MessageSquare, LogOut, Send } from "lucide-react";
 
 interface DisplayMessage {
   id: string;
@@ -33,6 +33,8 @@ const Sidebar = ({
   onSelect,
   onNew,
   onDelete,
+  onSignOut,
+  userEmail,
   coreFiles,
 }: {
   conversations: Conversation[];
@@ -40,6 +42,8 @@ const Sidebar = ({
   onSelect: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => void;
+  onSignOut: () => void;
+  userEmail: string;
   coreFiles: string[];
 }) => (
   <aside className="hidden md:flex w-[280px] min-h-screen border-r border-border bg-sidebar flex-col">
@@ -61,7 +65,6 @@ const Sidebar = ({
       </div>
     </div>
 
-    {/* Conversations */}
     <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
       <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         Conversations
@@ -98,7 +101,6 @@ const Sidebar = ({
       ))}
     </div>
 
-    {/* Core files */}
     <div className="p-2 border-t border-border space-y-0.5">
       <div className="px-2 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         Core
@@ -110,13 +112,17 @@ const Sidebar = ({
       ))}
     </div>
 
-    <div className="p-4 border-t border-border">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        System_Status: Grounded
+    <div className="p-4 border-t border-border space-y-2">
+      <div className="font-mono text-[10px] text-muted-foreground truncate" title={userEmail}>
+        {userEmail}
       </div>
-      <div className="font-mono text-[10px] uppercase tracking-wider text-primary mt-1">
-        Memory: Active
-      </div>
+      <button
+        onClick={onSignOut}
+        className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+      >
+        <LogOut size={10} />
+        Sign Out
+      </button>
     </div>
   </aside>
 );
@@ -181,6 +187,7 @@ const CORE_FILES = [
 ];
 
 const Index = () => {
+  const { user, signOut } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -188,11 +195,19 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load conversations on mount
   useEffect(() => {
     loadConversations();
   }, []);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + "px";
+    }
+  }, [input]);
 
   const loadConversations = async () => {
     try {
@@ -231,7 +246,7 @@ const Index = () => {
     [loadMessages]
   );
 
-  const startNewConversation = async () => {
+  const startNewConversation = () => {
     setActiveConvId(null);
     setMessages([]);
     setChatHistory([]);
@@ -258,15 +273,13 @@ const Index = () => {
     }, 50);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!input.trim() || isProcessing) return;
 
     const userText = input.trim();
     setInput("");
     setIsProcessing(true);
 
-    // Ensure we have a conversation
     let convId = activeConvId;
     if (!convId) {
       try {
@@ -281,7 +294,6 @@ const Index = () => {
       }
     }
 
-    // Save user message
     const userMsg: DisplayMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -300,7 +312,6 @@ const Index = () => {
     const newHistory: ChatMessage[] = [...chatHistory, { role: "user", content: userText }];
     setChatHistory(newHistory);
 
-    // Create placeholder assistant message
     const assistantTempId = (Date.now() + 1).toString();
     let assistantContent = "";
 
@@ -322,7 +333,6 @@ const Index = () => {
         const securityFlag = detectSecurityFlag(assistantContent);
         const memoryTier = detectMemoryTier(assistantContent, userText);
 
-        // Update display with final analysis
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantTempId ? { ...m, securityFlag, memoryTier } : m
@@ -331,7 +341,6 @@ const Index = () => {
 
         setChatHistory((prev) => [...prev, { role: "assistant", content: assistantContent }]);
 
-        // Persist
         try {
           await saveMessage({
             conversation_id: convId!,
@@ -341,7 +350,6 @@ const Index = () => {
             security_flag: securityFlag,
           });
 
-          // Update conversation title if this was the first exchange
           if (newHistory.length === 1) {
             await updateConversationTitle(convId!, generateTitle(userText));
             await loadConversations();
@@ -360,6 +368,13 @@ const Index = () => {
     });
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar
@@ -368,18 +383,18 @@ const Index = () => {
         onSelect={selectConversation}
         onNew={startNewConversation}
         onDelete={handleDeleteConversation}
+        onSignOut={signOut}
+        userEmail={user?.email ?? ""}
         coreFiles={CORE_FILES}
       />
 
       <main className="flex-1 flex flex-col min-h-screen">
-        {/* Processing bar */}
         {isProcessing && (
           <div className="h-[2px] bg-secondary overflow-hidden flex-shrink-0">
             <div className="h-full bg-primary" style={{ animation: "progressSlide 1.5s ease-in-out infinite" }} />
           </div>
         )}
 
-        {/* Feed */}
         <div className="flex-1 overflow-y-auto" ref={feedRef}>
           <div className="max-w-[768px] p-4 space-y-6">
             {messages.length === 0 && (
@@ -403,22 +418,35 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Command line input */}
+        {/* Command input */}
         <div className="border-t border-border p-4 flex-shrink-0">
-          <form onSubmit={handleSubmit} className="max-w-[768px]">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground select-none">›</span>
-              <input
-                type="text"
+          <div className="max-w-[768px]">
+            <div className="flex items-end gap-2">
+              <span className="font-mono text-xs text-muted-foreground select-none pb-3">›</span>
+              <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="..."
-                className="jackie-input flex-1"
+                className="jackie-input flex-1 resize-none overflow-hidden"
+                style={{ minHeight: "44px", maxHeight: "200px" }}
                 disabled={isProcessing}
+                rows={1}
               />
-              <span className="font-mono text-xs text-muted-foreground select-none">⏎</span>
+              <button
+                onClick={handleSubmit}
+                disabled={isProcessing || !input.trim()}
+                className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical flex-shrink-0"
+                title="Send (Enter)"
+              >
+                <Send size={16} />
+              </button>
             </div>
-          </form>
+            <div className="font-mono text-[10px] text-muted-foreground mt-1.5 ml-5">
+              Enter to send · Shift+Enter for new line
+            </div>
+          </div>
         </div>
       </main>
 
