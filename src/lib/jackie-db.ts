@@ -5,6 +5,7 @@ export interface Conversation {
   title: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
 }
 
 export interface StoredMessage {
@@ -15,6 +16,13 @@ export interface StoredMessage {
   memory_tier: number | null;
   security_flag: string | null;
   created_at: string;
+  user_id: string;
+}
+
+async function getUserId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  return user.id;
 }
 
 export async function listConversations(): Promise<Conversation[]> {
@@ -27,9 +35,10 @@ export async function listConversations(): Promise<Conversation[]> {
 }
 
 export async function createConversation(title?: string): Promise<Conversation> {
+  const userId = await getUserId();
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ title: title || "New conversation" })
+    .insert({ title: title || "New conversation", user_id: userId })
     .select()
     .single();
   if (error) throw error;
@@ -37,6 +46,8 @@ export async function createConversation(title?: string): Promise<Conversation> 
 }
 
 export async function deleteConversation(id: string): Promise<void> {
+  // Delete messages first, then conversation
+  await supabase.from("chat_messages").delete().eq("conversation_id", id);
   const { error } = await supabase.from("conversations").delete().eq("id", id);
   if (error) throw error;
 }
@@ -66,6 +77,7 @@ export async function saveMessage(msg: {
   memory_tier?: number;
   security_flag?: string | null;
 }): Promise<StoredMessage> {
+  const userId = await getUserId();
   const { data, error } = await supabase
     .from("chat_messages")
     .insert({
@@ -74,12 +86,12 @@ export async function saveMessage(msg: {
       content: msg.content,
       memory_tier: msg.memory_tier ?? 1,
       security_flag: msg.security_flag ?? null,
+      user_id: userId,
     })
     .select()
     .single();
   if (error) throw error;
 
-  // Touch the conversation's updated_at
   await supabase
     .from("conversations")
     .update({ updated_at: new Date().toISOString() })
@@ -88,7 +100,6 @@ export async function saveMessage(msg: {
   return data as StoredMessage;
 }
 
-/** Auto-generate a title from the first user message */
 export function generateTitle(content: string): string {
   const cleaned = content.replace(/\n/g, " ").trim();
   return cleaned.length > 50 ? cleaned.slice(0, 47) + "..." : cleaned;
