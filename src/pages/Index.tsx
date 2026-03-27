@@ -469,7 +469,14 @@ const Index = () => {
             <Menu size={18} />
           </button>
           <span className="font-mono text-sm font-bold text-primary tracking-wider">J</span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Jackie</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground flex-1">Jackie</span>
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary btn-mechanical transition-colors"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </div>
 
         {isProcessing && (
