@@ -149,13 +149,15 @@ const Sidebar = ({
           <div className="font-mono text-[10px] text-muted-foreground truncate" title={userEmail}>
             {userEmail}
           </div>
-          <button
-            onClick={onSignOut}
-            className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
-          >
-            <LogOut size={10} />
-            Sign Out
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onSignOut}
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <LogOut size={10} />
+              Sign Out
+            </button>
+          </div>
         </div>
       </aside>
     </>
