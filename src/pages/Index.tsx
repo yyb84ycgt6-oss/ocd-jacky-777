@@ -176,30 +176,60 @@ const MemoryDots = ({ tier }: { tier: 1 | 2 | 3 }) => (
 
 // ─── Messages ──────────────────────────────────────────────
 
-const JackieMessage = ({ message }: { message: DisplayMessage }) => (
-  <div className="space-y-3 stagger-enter">
-    <div className="flex items-center justify-between">
-      <span className="jackie-badge">Jackie here—</span>
-      {message.memoryTier && <MemoryDots tier={message.memoryTier} />}
-    </div>
+const JackieMessage = ({ message }: { message: DisplayMessage }) => {
+  const [speaking, setSpeaking] = useState(false);
 
-    {message.securityFlag && (
-      <div className="jackie-security-flag">
-        <div className="font-mono text-xs font-semibold uppercase tracking-wider mb-1">
-          ⚠ {message.securityFlag}
+  const toggleSpeak = async () => {
+    if (speaking) {
+      voiceManager.stop();
+      setSpeaking(false);
+    } else {
+      setSpeaking(true);
+      try {
+        await voiceManager.speak(message.content);
+      } catch {
+        // ignore
+      }
+      setSpeaking(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3 stagger-enter">
+      <div className="flex items-center justify-between">
+        <span className="jackie-badge">Jackie here—</span>
+        <div className="flex items-center gap-2">
+          {voiceManager.isSupported() && (
+            <button
+              onClick={toggleSpeak}
+              className="p-1 rounded-sm text-muted-foreground hover:text-primary transition-colors"
+              title={speaking ? "Stop speaking" : "Read aloud"}
+            >
+              {speaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
+            </button>
+          )}
+          {message.memoryTier && <MemoryDots tier={message.memoryTier} />}
         </div>
       </div>
-    )}
 
-    <div className="text-foreground leading-relaxed prose prose-invert prose-sm max-w-none">
-      <ReactMarkdown>{message.content}</ReactMarkdown>
-    </div>
+      {message.securityFlag && (
+        <div className="jackie-security-flag">
+          <div className="font-mono text-xs font-semibold uppercase tracking-wider mb-1">
+            ⚠ {message.securityFlag}
+          </div>
+        </div>
+      )}
 
-    <div className="font-mono text-[10px] text-muted-foreground">
-      {message.timestamp.toLocaleTimeString("en-US", { hour12: false })}
+      <div className="text-foreground leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+        <ReactMarkdown>{message.content}</ReactMarkdown>
+      </div>
+
+      <div className="font-mono text-[10px] text-muted-foreground">
+        {message.timestamp.toLocaleTimeString("en-US", { hour12: false })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const UserMessage = ({ message }: { message: DisplayMessage }) => (
   <div className="space-y-2">
