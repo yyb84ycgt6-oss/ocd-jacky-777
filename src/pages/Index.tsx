@@ -255,6 +255,9 @@ const UserMessage = ({ message }: { message: DisplayMessage }) => (
     <div className="text-muted-foreground leading-relaxed text-sm whitespace-pre-wrap">
       {message.content}
     </div>
+    {message.attachments && message.attachments.length > 0 && (
+      <AttachmentDisplay attachments={message.attachments} />
+    )}
     <div className="font-mono text-[10px] text-muted-foreground/50">
       {message.timestamp.toLocaleTimeString("en-US", { hour12: false })}
     </div>
