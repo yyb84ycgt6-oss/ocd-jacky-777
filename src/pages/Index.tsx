@@ -294,6 +294,13 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [selectedModel, setSelectedModel] = useState<JackieModelId>("google/gemini-2.5-pro");
+
+  const changeModel = useCallback(async (model: JackieModelId) => {
+    setSelectedModel(model);
+    if (activeConvId) {
+      try { await updateConversationModel(activeConvId, model); } catch { /* best effort */ }
+    }
+  }, [activeConvId]);
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
