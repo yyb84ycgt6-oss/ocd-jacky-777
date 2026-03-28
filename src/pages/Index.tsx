@@ -514,6 +514,8 @@ const Index = () => {
     URL.revokeObjectURL(url);
     toast.success("Chat exported.");
   };
+
+  return (
     <div className="flex min-h-screen bg-background">
       <Sidebar
         conversations={conversations}
