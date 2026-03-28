@@ -291,6 +291,8 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [selectedModel, setSelectedModel] = useState<JackieModelId>("google/gemini-2.5-pro");
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
   const feedRef = useRef<HTMLDivElement>(null);
