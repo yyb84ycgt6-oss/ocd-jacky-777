@@ -355,9 +355,13 @@ const Index = () => {
   }, []);
 
   const selectConversation = useCallback(
-    (id: string) => {
+    async (id: string) => {
       setActiveConvId(id);
       loadMessages(id);
+      try {
+        const model = await getConversationModel(id);
+        if (model) setSelectedModel(model as JackieModelId);
+      } catch { /* use current */ }
     },
     [loadMessages]
   );
