@@ -499,7 +499,21 @@ const Index = () => {
     }
   };
 
-  return (
+  const exportChat = () => {
+    if (messages.length === 0) return;
+    const conv = conversations.find((c) => c.id === activeConvId);
+    const lines = messages.map(
+      (m) => `[${m.timestamp.toISOString()}] ${m.role.toUpperCase()}: ${m.content}`
+    );
+    const blob = new Blob([lines.join("\n\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `jackie-chat_${conv?.title || "export"}_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Chat exported.");
+  };
     <div className="flex min-h-screen bg-background">
       <Sidebar
         conversations={conversations}
