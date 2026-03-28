@@ -291,6 +291,8 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -504,6 +506,41 @@ const Index = () => {
     }
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.types.includes("Files")) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+    const newPending: PendingFile[] = files.map((file) => ({
+      file,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+    setPendingFiles((prev) => [...prev, ...newPending]);
+    toast.success(`${files.length} file${files.length > 1 ? "s" : ""} added`);
+  };
+
   const exportChat = () => {
     if (messages.length === 0) return;
     const conv = conversations.find((c) => c.id === activeConvId);
@@ -537,7 +574,23 @@ const Index = () => {
         onToggleTheme={toggleTheme}
       />
 
-      <main className="flex-1 flex flex-col min-h-screen">
+      <main
+        className="flex-1 flex flex-col min-h-screen relative"
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        {isDragging && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 border-2 border-dashed border-primary rounded-sm pointer-events-none">
+            <div className="flex flex-col items-center gap-2">
+              <Download size={32} className="text-primary" />
+              <span className="font-mono text-xs uppercase tracking-widest text-primary">
+                Drop files here
+              </span>
+            </div>
+          </div>
+        )}
         {/* Mobile header */}
         <div className="flex items-center gap-2 p-3 border-b border-border md:hidden flex-shrink-0">
           <button
