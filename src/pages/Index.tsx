@@ -559,6 +559,12 @@ const Index = () => {
         {/* Command input */}
         <div className="border-t border-border p-4 flex-shrink-0">
           <div className="max-w-[768px]">
+            <ChatMediaBar
+              pendingFiles={pendingFiles}
+              onFilesAdded={(files) => setPendingFiles((prev) => [...prev, ...files])}
+              onFileRemoved={(id) => setPendingFiles((prev) => prev.filter((f) => f.id !== id))}
+              disabled={isProcessing}
+            />
             <div className="flex items-end gap-2">
               <span className="font-mono text-xs text-muted-foreground select-none pb-3">›</span>
               <textarea
@@ -574,7 +580,7 @@ const Index = () => {
               />
               <button
                 onClick={handleSubmit}
-                disabled={isProcessing || !input.trim()}
+                disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
                 className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical flex-shrink-0"
                 title="Send (Enter)"
               >
@@ -582,7 +588,7 @@ const Index = () => {
               </button>
             </div>
             <div className="font-mono text-[10px] text-muted-foreground mt-1.5 ml-5">
-              Enter to send · Shift+Enter for new line
+              Enter to send · Shift+Enter for new line · Attach files, photos, or record video
             </div>
           </div>
         </div>
