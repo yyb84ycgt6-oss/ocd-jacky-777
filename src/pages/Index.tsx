@@ -751,7 +751,7 @@ const Index = () => {
                           <button
                             key={m.id}
                             onClick={() => {
-                              setSelectedModel(m.id);
+                              changeModel(m.id);
                               setModelMenuOpen(false);
                             }}
                             className={`w-full text-left px-3 py-2 font-mono text-xs hover:bg-secondary transition-colors flex items-center gap-3 ${
