@@ -428,12 +428,12 @@ const Index = () => {
     scrollToBottom();
 
     try {
-      await saveMessage({ conversation_id: convId, role: "user", content: userText });
+      await saveMessage({ conversation_id: convId, role: "user", content: displayContent });
     } catch {
       console.error("Failed to persist user message");
     }
 
-    const newHistory: ChatMessage[] = [...chatHistory, { role: "user", content: userText }];
+    const newHistory: ChatMessage[] = [...chatHistory, { role: "user", content: displayContent }];
     setChatHistory(newHistory);
 
     const assistantTempId = (Date.now() + 1).toString();
