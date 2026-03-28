@@ -370,16 +370,18 @@ const Index = () => {
   };
 
   const handleSubmit = async () => {
-    if (!input.trim() || isProcessing) return;
+    if ((!input.trim() && pendingFiles.length === 0) || isProcessing) return;
 
     const userText = input.trim();
+    const filesToUpload = [...pendingFiles];
     setInput("");
+    setPendingFiles([]);
     setIsProcessing(true);
 
     let convId = activeConvId;
     if (!convId) {
       try {
-        const conv = await createConversation(generateTitle(userText));
+        const conv = await createConversation(generateTitle(userText || "Attachment"));
         convId = conv.id;
         setActiveConvId(convId);
         await loadConversations();
@@ -390,11 +392,28 @@ const Index = () => {
       }
     }
 
+    // Upload attachments
+    let uploadedAttachments: Attachment[] = [];
+    if (filesToUpload.length > 0) {
+      try {
+        uploadedAttachments = await Promise.all(
+          filesToUpload.map((pf) => uploadAttachment(pf.file, convId!))
+        );
+        // Clean up previews
+        filesToUpload.forEach((pf) => { if (pf.preview) URL.revokeObjectURL(pf.preview); });
+      } catch {
+        toast.error("Failed to upload attachments.");
+      }
+    }
+
+    const displayContent = userText || (uploadedAttachments.length > 0 ? `[${uploadedAttachments.length} file(s) attached]` : "");
+
     const userMsg: DisplayMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: userText,
+      content: displayContent,
       timestamp: new Date(),
+      attachments: uploadedAttachments,
     };
     setMessages((prev) => [...prev, userMsg]);
     scrollToBottom();
