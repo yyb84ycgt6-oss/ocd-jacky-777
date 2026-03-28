@@ -295,7 +295,7 @@ const Index = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    loadConversations();
+    loadConversations(true);
   }, []);
 
   // Auto-resize textarea
@@ -306,10 +306,14 @@ const Index = () => {
     }
   }, [input]);
 
-  const loadConversations = async () => {
+  const loadConversations = async (autoSelect = false) => {
     try {
       const convs = await listConversations();
       setConversations(convs);
+      if (autoSelect && convs.length > 0 && !activeConvId) {
+        setActiveConvId(convs[0].id);
+        loadMessages(convs[0].id);
+      }
     } catch (e) {
       console.error("Failed to load conversations:", e);
     }
