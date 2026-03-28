@@ -613,6 +613,17 @@ const Index = () => {
                 disabled={isProcessing}
                 rows={1}
               />
+              <VoiceRecorder
+                onRecordingComplete={(file) => {
+                  const pf: PendingFile = {
+                    file,
+                    id: `${Date.now()}-voice`,
+                    preview: URL.createObjectURL(file),
+                  };
+                  setPendingFiles((prev) => [...prev, pf]);
+                }}
+                disabled={isProcessing}
+              />
               <button
                 onClick={handleSubmit}
                 disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
