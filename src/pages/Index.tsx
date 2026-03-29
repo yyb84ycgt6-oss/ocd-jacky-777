@@ -472,9 +472,43 @@ const Index = () => {
   const feedRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const loadTags = useCallback(async () => {
+    try {
+      const [t, m] = await Promise.all([listTags(), getTagConversationMap()]);
+      setTags(t);
+      setTagMap(m);
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     loadConversations(true);
+    loadTags();
   }, []);
+
+  const handleCreateTag = async (name: string, color: string) => {
+    try {
+      await createTag(name, color);
+      await loadTags();
+    } catch (e: any) {
+      toast.error(e.message?.includes("duplicate") ? "Tag already exists" : "Failed to create tag");
+    }
+  };
+
+  const handleDeleteTag = async (id: string) => {
+    try {
+      await deleteTag(id);
+      if (activeTagFilter === id) setActiveTagFilter(null);
+      await loadTags();
+    } catch { toast.error("Failed to delete tag"); }
+  };
+
+  const handleToggleTag = async (convId: string, tagId: string, has: boolean) => {
+    try {
+      if (has) await removeTagFromConversation(convId, tagId);
+      else await addTagToConversation(convId, tagId);
+      await loadTags();
+    } catch { toast.error("Failed to update tag"); }
+  };
 
   // Auto-resize textarea
   useEffect(() => {
