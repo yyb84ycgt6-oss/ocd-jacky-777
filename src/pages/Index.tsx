@@ -26,7 +26,18 @@ import { ChatMediaBar, type PendingFile } from "@/components/ChatMediaBar";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { AttachmentDisplay } from "@/components/AttachmentDisplay";
 import { toast } from "sonner";
-import { Plus, Trash2, MessageSquare, LogOut, Send, Menu, X, Sun, Moon, Volume2, VolumeX, Download, Mic, ChevronDown, Zap, DollarSign, Search } from "lucide-react";
+import { Plus, Trash2, MessageSquare, LogOut, Send, Menu, X, Sun, Moon, Volume2, VolumeX, Download, Mic, ChevronDown, Zap, DollarSign, Search, Tag, XCircle } from "lucide-react";
+import {
+  listTags,
+  createTag,
+  deleteTag,
+  getTagConversationMap,
+  addTagToConversation,
+  removeTagFromConversation,
+  TAG_COLOR_MAP,
+  TAG_COLORS,
+  type Tag as TagType,
+} from "@/lib/jackie-tags";
 
 interface DisplayMessage {
   id: string;
