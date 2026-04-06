@@ -27,7 +27,36 @@ import {
 } from '@/game/cardEconomy';
 
 // ── UI Constants ──
-type ArenaTab = 'collection' | 'codex' | 'battle' | 'packs' | 'craft' | 'economy';
+type ArenaTab = 'collection' | 'codex' | 'battle' | 'tournament' | 'packs' | 'craft' | 'economy';
+
+// ── Tournament ──
+interface TournamentMatch {
+  round: number;
+  enemyFaction: string;
+  difficulty: number;
+  prize: { dust: number; gems: number; label: string };
+  status: 'upcoming' | 'won' | 'lost' | 'active';
+}
+
+function generateTournamentBracket(playerFaction: string): TournamentMatch[] {
+  const enemies = FACTIONS.filter(f => f !== playerFaction);
+  const shuffled = [...enemies].sort(() => Math.random() - 0.5);
+  // 3 rounds, last round is random repeat
+  const foes = [shuffled[0], shuffled[1], shuffled[Math.floor(Math.random() * 2)]];
+  return [
+    { round: 1, enemyFaction: foes[0], difficulty: 1, prize: { dust: 30, gems: 10, label: '30 Dust + 10 Gems' }, status: 'upcoming' },
+    { round: 2, enemyFaction: foes[1], difficulty: 2, prize: { dust: 75, gems: 25, label: '75 Dust + 25 Gems + Card Chance' }, status: 'upcoming' },
+    { round: 3, enemyFaction: foes[2], difficulty: 3, prize: { dust: 150, gems: 50, label: '150 Dust + 50 Gems + Guaranteed Card' }, status: 'upcoming' },
+  ];
+}
+
+// ── Bred card loading ──
+function loadBredCards(): CardDef[] {
+  try {
+    const raw = localStorage.getItem('bred_card_defs');
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
 
 const RARITY_CONFIG: Record<CardRarity, { label: string; color: string; glow: string; bg: string }> = {
   common:    { label: 'Common',    color: 'hsl(0,0%,65%)',      glow: 'none',                                    bg: 'hsl(0,0%,20%)' },
