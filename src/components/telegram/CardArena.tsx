@@ -403,7 +403,7 @@ function BattleScreen({ playerFaction, onExit, onRewards, forcedEnemy, difficult
           const gw = ns.player > ns.enemy ? 'player' : ns.enemy > ns.player ? 'enemy' : null;
           addLog(`═══ ${gw === 'player' ? 'VICTORY!' : gw === 'enemy' ? 'DEFEAT' : 'DRAW'} ═══`);
           setGameEnded(true);
-          onRewards(gw === 'player', prev.round);
+          onRewards(gw === 'player', prev.round, enemyFaction);
           return { ...s, turn: nextTurn, phase: 'game_over' as const, winner: gw, round: prev.round };
         }
 
