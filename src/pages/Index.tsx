@@ -649,7 +649,24 @@ const Index = () => {
     setPendingFiles([]);
     setIsProcessing(true);
 
-    let convId = activeConvId;
+    // ── Slash Commands ──
+    if (userText.startsWith('/')) {
+      const slashResult = await handleSlashCommand(userText, convId);
+      if (slashResult) {
+        const sysMsg: DisplayMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: slashResult,
+          timestamp: new Date(),
+          memoryTier: 1,
+        };
+        setMessages((prev) => [...prev, sysMsg]);
+        try { await saveMessage({ conversation_id: convId, role: "assistant", content: slashResult }); } catch {}
+        setIsProcessing(false);
+        scrollToBottom();
+        return;
+      }
+    }
     if (!convId) {
       try {
         const conv = await createConversation(generateTitle(userText || "Attachment"));
