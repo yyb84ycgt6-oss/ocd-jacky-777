@@ -91,7 +91,7 @@ function CreatureCardDisplay({ card, compact, onTap, selected }: { card: Creatur
   return (
     <motion.div
       whileTap={{ scale: 0.95 }}
-      onClick={() => { haptic('light'); onTap?.(); }}
+      onClick={() => { haptic.light(); onTap?.(); }}
       className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${selected ? 'ring-2 ring-primary' : ''}`}
       style={{ background: rc.bg, boxShadow: selected ? rc.glow : 'none', minWidth: compact ? 100 : undefined }}
     >
@@ -215,13 +215,13 @@ export default function CardArena({ onBack }: CardArenaProps) {
 
   const addToDeck = useCallback((cardId: string) => {
     if (deck.cards.length >= deck.maxSize) return;
-    haptic('light');
+    haptic.light();
     setDeck(d => ({ ...d, cards: [...d.cards, cardId] }));
     setCards(prev => prev.map(c => c.id === cardId ? { ...c, inDeck: c.inDeck + 1 } : c));
   }, [deck]);
 
   const removeFromDeck = useCallback((cardId: string) => {
-    haptic('light');
+    haptic.light();
     const idx = deck.cards.indexOf(cardId);
     if (idx === -1) return;
     setDeck(d => ({ ...d, cards: d.cards.filter((_, i) => i !== idx) }));
@@ -229,7 +229,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
   }, [deck]);
 
   const simulateReveal = useCallback(() => {
-    haptic('heavy');
+    haptic.heavy();
     const pool = SAMPLE_CARDS;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     setRevealCard({ ...pick, id: `c_${Date.now()}`, owned: 1, inDeck: 0 });
@@ -252,7 +252,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
 
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
-        <Button variant="ghost" size="icon" onClick={() => { haptic('light'); onBack(); }} className="h-9 w-9">
+        <Button variant="ghost" size="icon" onClick={() => { haptic.light(); onBack(); }} className="h-9 w-9">
           <ArrowLeft size={18} />
         </Button>
         <div className="flex-1">
@@ -268,7 +268,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
         {tabs.map(t => (
           <button
             key={t.id}
-            onClick={() => { haptic('light'); setTab(t.id); }}
+            onClick={() => { haptic.light(); setTab(t.id); }}
             className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${tab === t.id ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
           >
             {t.icon}{t.label}
@@ -425,7 +425,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] text-muted-foreground">{hoursLeft}h remaining</span>
-                          <Button size="sm" disabled={full || t.status !== 'open' || deck.cards.length < 5} onClick={() => haptic('medium')} className="h-8 text-xs">
+                          <Button size="sm" disabled={full || t.status !== 'open' || deck.cards.length < 5} onClick={() => haptic.medium()} className="h-8 text-xs">
                             {full ? <><Lock size={12} /> Full</> : <><Swords size={12} /> Enter</>}
                           </Button>
                         </div>
@@ -440,7 +440,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
                 <Crown size={28} className="text-primary mx-auto mb-2" />
                 <p className="text-sm font-bold text-foreground">Quick Match</p>
                 <p className="text-[10px] text-muted-foreground mb-3">Battle a random opponent with your current deck</p>
-                <Button size="sm" disabled={deck.cards.length < 5} onClick={() => haptic('heavy')}>
+                <Button size="sm" disabled={deck.cards.length < 5} onClick={() => haptic.heavy()}>
                   <Swords size={14} /> Find Opponent
                 </Button>
                 {deck.cards.length < 5 && <p className="text-[10px] text-destructive mt-2">Need at least 5 cards in deck</p>}
