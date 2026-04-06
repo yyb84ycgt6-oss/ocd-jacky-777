@@ -5,8 +5,9 @@ import RoomHub from '@/components/telegram/RoomHub';
 import SecurityCenter from '@/components/telegram/SecurityCenter';
 import MusicLab from '@/components/telegram/MusicLab';
 import CreatureLab from '@/components/telegram/CreatureLab';
+import CardArena from '@/components/telegram/CardArena';
 
-type ActiveRoom = 'hub' | 'security' | 'music' | 'creatures' | 'jackie' | 'jade' | 'store' | 'legal';
+type ActiveRoom = 'hub' | 'security' | 'music' | 'creatures' | 'cards' | 'jackie' | 'jade' | 'store' | 'legal';
 
 export default function TelegramShell() {
   const navigate = useNavigate();
@@ -30,6 +31,9 @@ export default function TelegramShell() {
       case 'creatures':
         setActiveRoom('creatures');
         break;
+      case 'cards':
+        setActiveRoom('cards');
+        break;
       case 'legal':
         setActiveRoom('legal');
         break;
@@ -45,6 +49,7 @@ export default function TelegramShell() {
         {activeRoom === 'security' && <SecurityCenter onBack={() => setActiveRoom('hub')} />}
         {activeRoom === 'music' && <MusicLab onBack={() => setActiveRoom('hub')} />}
         {activeRoom === 'creatures' && <CreatureLab onBack={() => setActiveRoom('hub')} />}
+        {activeRoom === 'cards' && <CardArena onBack={() => setActiveRoom('hub')} />}
       </div>
     </TelegramProvider>
   );
