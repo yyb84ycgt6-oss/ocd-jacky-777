@@ -166,6 +166,16 @@ function PackCard({ pack, onSelect, showScores, isComparing, onToggleCompare, is
         )}
       </motion.button>
 
+      {/* Wishlist toggle */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggleWishlist(pack); }}
+        className={`absolute top-2 left-2 z-20 p-1.5 rounded-full transition-all ${
+          isWishlisted ? 'bg-red-500/20 text-red-400' : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+        }`}
+      >
+        <Heart className={`w-3 h-3 ${isWishlisted ? 'fill-current' : ''}`} />
+      </button>
+
       {/* Compare toggle */}
       <button
         onClick={(e) => { e.stopPropagation(); onToggleCompare(pack); }}
