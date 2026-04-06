@@ -649,6 +649,21 @@ const Index = () => {
     setPendingFiles([]);
     setIsProcessing(true);
 
+    let convId = activeConvId;
+    if (!convId) {
+      try {
+        const conv = await createConversation(generateTitle(userText || "Attachment"));
+        convId = conv.id;
+        setActiveConvId(convId);
+        await updateConversationModel(convId, selectedModel);
+        await loadConversations();
+      } catch {
+        toast.error("Failed to create conversation.");
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     // ── Slash Commands ──
     if (userText.startsWith('/')) {
       const slashResult = await handleSlashCommand(userText, convId);
@@ -664,19 +679,6 @@ const Index = () => {
         try { await saveMessage({ conversation_id: convId, role: "assistant", content: slashResult }); } catch {}
         setIsProcessing(false);
         scrollToBottom();
-        return;
-      }
-    }
-    if (!convId) {
-      try {
-        const conv = await createConversation(generateTitle(userText || "Attachment"));
-        convId = conv.id;
-        setActiveConvId(convId);
-        await updateConversationModel(convId, selectedModel);
-        await loadConversations();
-      } catch {
-        toast.error("Failed to create conversation.");
-        setIsProcessing(false);
         return;
       }
     }
