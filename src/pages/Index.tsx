@@ -853,6 +853,16 @@ const Index = () => {
     ]);
 
     const gameContext = getGameStateContext();
+    // Inject Jackie's memory + tasks into context
+    let jackieContext = gameContext;
+    try {
+      const [memCtx, taskCtx, fileCtx] = await Promise.all([
+        buildMemoryContext(),
+        buildTaskContext(),
+        convId ? buildFileContext(convId) : Promise.resolve(""),
+      ]);
+      jackieContext = [gameContext, memCtx, taskCtx, fileCtx].filter(Boolean).join("\n");
+    } catch { /* graceful degradation */ }
 
     await streamChat({
       messages: newHistory,
