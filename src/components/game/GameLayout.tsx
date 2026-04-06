@@ -27,10 +27,11 @@ import BagPage from '@/components/game/BagPage';
 import MarketplacePage from '@/components/game/MarketplacePage';
 import GuildBankPage from '@/components/game/GuildBankPage';
 import PremiumStorePage from '@/components/game/PremiumStorePage';
+import JadeStorePage from '@/components/game/JadeStorePage';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-type Tab = 'dashboard' | 'city' | 'research' | 'army' | 'expeditions' | 'heroes' | 'shards' | 'map' | 'crafting' | 'diplomacy' | 'jukebox' | 'oracle' | 'eventlog' | 'quests' | 'trading' | 'gacha' | 'battlepass' | 'leaderboard' | 'shop' | 'bag' | 'marketplace' | 'guildbank' | 'premiumstore';
+type Tab = 'dashboard' | 'city' | 'research' | 'army' | 'expeditions' | 'heroes' | 'shards' | 'map' | 'crafting' | 'diplomacy' | 'jukebox' | 'oracle' | 'eventlog' | 'quests' | 'trading' | 'gacha' | 'battlepass' | 'leaderboard' | 'shop' | 'bag' | 'marketplace' | 'guildbank' | 'premiumstore' | 'jadestore';
 
 const tabVariants = {
   initial: { opacity: 0, y: 12 },
@@ -69,6 +70,7 @@ export default function GameLayout() {
     { id: 'marketplace', label: 'Market', icon: '🏬' },
     { id: 'guildbank', label: t('nav.guildBank') || 'Guild Bank', icon: '🏦' },
     { id: 'premiumstore', label: 'Premium Store', icon: '💎' },
+    { id: 'jadestore', label: 'Jade Vault', icon: '🏛️' },
   ];
 
   const handleTabChange = (tab: Tab) => {
@@ -102,6 +104,7 @@ export default function GameLayout() {
       case 'marketplace': return <MarketplacePage />;
       case 'guildbank': return <GuildBankPage />;
       case 'premiumstore': return <PremiumStorePage />;
+      case 'jadestore': return <JadeStorePage />;
     }
   };
 
