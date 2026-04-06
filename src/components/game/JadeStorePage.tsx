@@ -145,7 +145,7 @@ function PackCard({ pack, onSelect, showScores, isComparing, onToggleCompare, is
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
             <span className="text-sm font-bold text-foreground">{pack.priceDiamonds.toLocaleString()}</span>
-            <span className="text-[10px] text-muted-foreground">gold</span>
+            <span className="text-[10px] text-muted-foreground">diamonds</span>
           </div>
           {pack.priceUsd && (
             <span className="text-[10px] font-semibold text-primary">${pack.priceUsd}</span>
@@ -297,8 +297,8 @@ function PackModal({ pack, onClose, showScores }: { pack: JadePack; onClose: () 
   const { state, setState, saveState, canAfford } = useGame();
   const [purchasing, setPurchasing] = useState(false);
   const [purchased, setPurchased] = useState(false);
-  const playerGold = state.resources.gold;
-  const affordable = playerGold >= pack.priceDiamonds;
+  const playerDiamonds = state.resources.diamonds;
+  const affordable = playerDiamonds >= pack.priceDiamonds;
 
   const handlePurchase = useCallback(() => {
     if (!affordable || purchasing) return;
@@ -306,7 +306,7 @@ function PackModal({ pack, onClose, showScores }: { pack: JadePack; onClose: () 
 
     setTimeout(() => {
       setState(prev => {
-        const newResources = { ...prev.resources, gold: prev.resources.gold - pack.priceDiamonds };
+        const newResources = { ...prev.resources, gold: prev.resources.diamonds - pack.priceDiamonds };
         const newItems = rewardsToItems([...pack.coreRewards, ...(pack.bonusRewards || [])], pack.id);
         const newBag = [...(prev.bag || []), ...newItems];
 
@@ -432,8 +432,8 @@ function PackModal({ pack, onClose, showScores }: { pack: JadePack; onClose: () 
               </div>
             )}
             <div className="rounded-lg bg-muted/30 p-2 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">Your Gold</p>
-              <p className={`text-sm font-bold ${affordable ? 'text-emerald-400' : 'text-red-400'}`}>{playerGold.toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Your Diamonds</p>
+              <p className={`text-sm font-bold ${affordable ? 'text-emerald-400' : 'text-red-400'}`}>{playerDiamonds.toLocaleString()}</p>
             </div>
           </div>
 
@@ -459,7 +459,7 @@ function PackModal({ pack, onClose, showScores }: { pack: JadePack; onClose: () 
               ) : purchasing ? (
                 <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1 }}>Opening Vault…</motion.span>
               ) : (
-                <><Crown className="w-4 h-4 mr-2" /> {pack.priceDiamonds.toLocaleString()} Gold</>
+                <><Crown className="w-4 h-4 mr-2" /> {pack.priceDiamonds.toLocaleString()} 💎<>
               )}
             </Button>
             {pack.priceUsd && (
@@ -469,7 +469,7 @@ function PackModal({ pack, onClose, showScores }: { pack: JadePack; onClose: () 
             )}
           </div>
           {!affordable && !purchasing && !purchased && (
-            <p className="text-[10px] text-red-400 text-center mt-1">Insufficient gold — need {(pack.priceDiamonds - playerGold).toLocaleString()} more</p>
+            <p className="text-[10px] text-red-400 text-center mt-1">Insufficient diamonds — need {(pack.priceDiamonds - playerDiamonds).toLocaleString()} more</p>
           )}
 
           {/* Fairness notice */}
@@ -512,7 +512,7 @@ function HeroBanner({ packs, onSelect }: { packs: JadePack[]; onSelect: (p: Jade
             <Button size="sm" onClick={() => onSelect(current)} className="bg-gradient-to-r from-primary to-primary/80">
               View <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
-            <span className="text-sm font-bold text-foreground">{current.priceDiamonds.toLocaleString()} gold</span>
+            <span className="text-sm font-bold text-foreground">{current.priceDiamonds.toLocaleString()} 💎</span>
             {current.priceUsd && <span className="text-xs text-primary">(${current.priceUsd})</span>}
           </div>
         </div>
@@ -641,7 +641,7 @@ export default function JadeStorePage() {
         <div className="flex items-center gap-2">
           <div className="text-right mr-1">
             <p className="text-[10px] text-muted-foreground">Balance</p>
-            <p className="text-sm font-bold text-amber-400">{state.resources.gold.toLocaleString()} 🪙</p>
+            <p className="text-sm font-bold text-cyan-400">{state.resources.diamonds.toLocaleString()} 💎</p>
           </div>
           {/* Admin toggle */}
           <button
