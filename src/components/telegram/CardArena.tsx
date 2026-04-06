@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { haptic } from '@/lib/telegram';
+import { toast } from 'sonner';
 import {
   ArrowLeft, Layers, Swords, Trophy, Star, Sparkles, Crown,
   Shield, Zap, Heart, Plus, Minus, ChevronRight, BookOpen,
