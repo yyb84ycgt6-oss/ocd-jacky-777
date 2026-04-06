@@ -6,50 +6,22 @@ import { Badge } from '@/components/ui/badge';
 import { haptic } from '@/lib/telegram';
 import {
   ArrowLeft, Layers, Swords, Trophy, Star, Sparkles, Crown,
-  Shield, Zap, Heart, Eye, Plus, Minus, RotateCcw, Lock
+  Shield, Zap, Heart, Plus, Minus, RotateCcw, Play, Pause,
+  ChevronRight, Target, Flame, Droplets, Wind, Mountain, Sun, Moon
 } from 'lucide-react';
+import {
+  type CardDef, type CardRarity, type CardElement, type Lane, type BattleUnit, type BattleState, type BoardState,
+  BALANCE_CONSTANT, RARITY_BONUS,
+  cardBudget, unitValue, manaEfficiency, comboMultiplier, comboEffect,
+  boardScore, lanePower, createBattleState, applyDamage, resolveClash,
+  tickStatuses, drawCards, hasShield, rollCrit, critChance, critDamage,
+  roundWinner, ELEMENT_ADVANTAGE,
+} from '@/game/cardEngine';
+import { STARTER_CARDS, buildFactionDeck, FACTIONS, FACTION_ICONS } from '@/game/cardData';
 
-// ── Types ──
-type CardRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
-type CardElement = 'fire' | 'water' | 'earth' | 'air' | 'shadow' | 'light';
-type ArenaTab = 'collection' | 'deck' | 'arena' | 'reveal';
+// ── UI Constants ──
+type ArenaTab = 'collection' | 'deck' | 'battle' | 'open';
 
-interface CreatureCard {
-  id: string;
-  name: string;
-  species: string;
-  element: CardElement;
-  rarity: CardRarity;
-  attack: number;
-  defense: number;
-  health: number;
-  ability: string;
-  abilityDesc: string;
-  art: string; // emoji art
-  owned: number;
-  inDeck: number;
-}
-
-interface Deck {
-  id: string;
-  name: string;
-  cards: string[]; // card IDs
-  maxSize: number;
-}
-
-interface Tournament {
-  id: string;
-  name: string;
-  entryFee: number;
-  prizePool: string;
-  participants: number;
-  maxParticipants: number;
-  status: 'open' | 'in_progress' | 'completed';
-  endsAt: number;
-  tier: CardRarity;
-}
-
-// ── Constants ──
 const RARITY_CONFIG: Record<CardRarity, { label: string; color: string; glow: string; bg: string }> = {
   common:    { label: 'Common',    color: 'hsl(0,0%,65%)',      glow: 'none',                                    bg: 'hsl(0,0%,20%)' },
   uncommon:  { label: 'Uncommon',  color: 'hsl(140,60%,50%)',   glow: '0 0 8px hsl(140,60%,50%,0.3)',            bg: 'hsl(140,30%,15%)' },
@@ -63,66 +35,59 @@ const ELEMENT_ICONS: Record<CardElement, string> = {
   fire: '🔥', water: '💧', earth: '🪨', air: '💨', shadow: '🌑', light: '✨',
 };
 
-const SAMPLE_CARDS: CreatureCard[] = [
-  { id: 'c1', name: 'Ember Drake', species: 'Dragon', element: 'fire', rarity: 'rare', attack: 7, defense: 4, health: 6, ability: 'Inferno Breath', abilityDesc: 'Deal 3 damage to all enemies', art: '🐉', owned: 2, inDeck: 1 },
-  { id: 'c2', name: 'Tidecaller', species: 'Serpent', element: 'water', rarity: 'epic', attack: 5, defense: 8, health: 7, ability: 'Tidal Shield', abilityDesc: 'Block next 2 attacks', art: '🐍', owned: 1, inDeck: 0 },
-  { id: 'c3', name: 'Stone Golem', species: 'Golem', element: 'earth', rarity: 'common', attack: 3, defense: 9, health: 10, ability: 'Fortify', abilityDesc: '+2 defense for 3 turns', art: '🗿', owned: 5, inDeck: 2 },
-  { id: 'c4', name: 'Zephyr Hawk', species: 'Phoenix', element: 'air', rarity: 'uncommon', attack: 6, defense: 3, health: 5, ability: 'Gale Strike', abilityDesc: 'Attack first, ignore defense', art: '🦅', owned: 3, inDeck: 1 },
-  { id: 'c5', name: 'Void Wraith', species: 'Wraith', element: 'shadow', rarity: 'legendary', attack: 9, defense: 5, health: 8, ability: 'Soul Drain', abilityDesc: 'Steal 2 health on hit', art: '👻', owned: 1, inDeck: 1 },
-  { id: 'c6', name: 'Radiant Stag', species: 'Beast', element: 'light', rarity: 'mythic', attack: 8, defense: 7, health: 9, ability: 'Divine Blessing', abilityDesc: 'Heal all allies 3 HP', art: '🦌', owned: 1, inDeck: 0 },
-  { id: 'c7', name: 'Flame Imp', species: 'Imp', element: 'fire', rarity: 'common', attack: 4, defense: 2, health: 3, ability: 'Scorch', abilityDesc: 'Burn for 1 damage/turn', art: '😈', owned: 8, inDeck: 2 },
-  { id: 'c8', name: 'Frost Wyrm', species: 'Dragon', element: 'water', rarity: 'legendary', attack: 8, defense: 6, health: 9, ability: 'Absolute Zero', abilityDesc: 'Freeze target for 2 turns', art: '🐲', owned: 1, inDeck: 1 },
-  { id: 'c9', name: 'Crystal Sprite', species: 'Fae', element: 'light', rarity: 'rare', attack: 4, defense: 5, health: 4, ability: 'Prismatic Barrier', abilityDesc: 'Reflect 50% damage', art: '🧚', owned: 2, inDeck: 0 },
-  { id: 'c10', name: 'Obsidian Wolf', species: 'Beast', element: 'shadow', rarity: 'epic', attack: 7, defense: 6, health: 7, ability: 'Shadow Pounce', abilityDesc: 'Double damage from stealth', art: '🐺', owned: 1, inDeck: 1 },
-  { id: 'c11', name: 'Thornback Turtle', species: 'Beast', element: 'earth', rarity: 'uncommon', attack: 2, defense: 10, health: 12, ability: 'Shell Armor', abilityDesc: 'Reduce all damage by 2', art: '🐢', owned: 4, inDeck: 0 },
-  { id: 'c12', name: 'Storm Roc', species: 'Phoenix', element: 'air', rarity: 'rare', attack: 6, defense: 4, health: 5, ability: 'Chain Lightning', abilityDesc: 'Hit 3 random enemies', art: '⚡', owned: 2, inDeck: 1 },
-];
+const TYPE_ICONS: Record<string, string> = { unit: '⚔', spell: '✦', relic: '◆' };
 
-const SAMPLE_TOURNAMENTS: Tournament[] = [
-  { id: 't1', name: 'Bronze Crucible', entryFee: 100, prizePool: '5,000 Gold', participants: 12, maxParticipants: 16, status: 'open', endsAt: Date.now() + 86400000, tier: 'common' },
-  { id: 't2', name: 'Silver Gauntlet', entryFee: 500, prizePool: '25,000 Gold + Rare Pack', participants: 8, maxParticipants: 8, status: 'in_progress', endsAt: Date.now() + 43200000, tier: 'rare' },
-  { id: 't3', name: 'Sovereign\'s Crown', entryFee: 2000, prizePool: 'Mythic Card + 100K Gold', participants: 3, maxParticipants: 4, status: 'open', endsAt: Date.now() + 172800000, tier: 'mythic' },
-];
-
-// ── Sub-components ──
-
-function CreatureCardDisplay({ card, compact, onTap, selected }: { card: CreatureCard; compact?: boolean; onTap?: () => void; selected?: boolean }) {
+// ── Card Display ──
+function MiniCard({ card, compact, onTap, selected, showBudget }: {
+  card: CardDef; compact?: boolean; onTap?: () => void; selected?: boolean; showBudget?: boolean;
+}) {
   const rc = RARITY_CONFIG[card.rarity];
+  const budget = cardBudget(card.cost, card.rarity);
+  const value = unitValue(card);
+  const eff = manaEfficiency(card);
+
   return (
     <motion.div
       whileTap={{ scale: 0.95 }}
       onClick={() => { haptic.light(); onTap?.(); }}
       className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${selected ? 'ring-2 ring-primary' : ''}`}
-      style={{ background: rc.bg, boxShadow: selected ? rc.glow : 'none', minWidth: compact ? 100 : undefined }}
+      style={{ background: rc.bg, boxShadow: selected ? rc.glow : 'none' }}
     >
       <div className="p-2.5">
-        {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: rc.color }}>{rc.label}</span>
-          <span className="text-xs">{ELEMENT_ICONS[card.element]}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] text-muted-foreground">{TYPE_ICONS[card.type]}</span>
+            <span className="text-xs">{ELEMENT_ICONS[card.element]}</span>
+          </div>
         </div>
-        {/* Art */}
-        <div className="text-center text-3xl my-2" role="img" aria-label={card.name}>{card.art}</div>
-        {/* Name */}
+        {/* Cost orb */}
+        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary/80 flex items-center justify-center">
+          <span className="text-[10px] font-black text-primary-foreground">{card.cost}</span>
+        </div>
+        <div className="text-center text-3xl my-2">{card.art}</div>
         <p className="text-xs font-bold text-foreground truncate text-center">{card.name}</p>
         {!compact && (
           <>
-            <p className="text-[10px] text-muted-foreground text-center">{card.species}</p>
-            {/* Stats */}
-            <div className="flex justify-between mt-2 text-[10px]">
-              <span className="flex items-center gap-0.5"><Swords size={10} className="text-red-400" />{card.attack}</span>
-              <span className="flex items-center gap-0.5"><Shield size={10} className="text-blue-400" />{card.defense}</span>
-              <span className="flex items-center gap-0.5"><Heart size={10} className="text-green-400" />{card.health}</span>
-            </div>
-            {/* Ability */}
+            {card.faction && <p className="text-[9px] text-muted-foreground text-center">{FACTION_ICONS[card.faction] || ''} {card.faction}</p>}
+            {card.type === 'unit' && (
+              <div className="flex justify-between mt-2 text-[10px]">
+                <span className="flex items-center gap-0.5"><Swords size={10} className="text-red-400" />{card.power}</span>
+                <span className="flex items-center gap-0.5"><Shield size={10} className="text-blue-400" />{card.guard}</span>
+                {card.lane && <span className="text-muted-foreground">{card.lane}</span>}
+              </div>
+            )}
             <div className="mt-2 p-1.5 rounded bg-black/30 border border-white/5">
               <p className="text-[10px] font-semibold text-foreground flex items-center gap-1"><Zap size={9} />{card.ability}</p>
               <p className="text-[9px] text-muted-foreground mt-0.5">{card.abilityDesc}</p>
             </div>
-            <div className="flex justify-between mt-2 text-[10px] text-muted-foreground">
-              <span>Owned: {card.owned}</span>
-              <span>In deck: {card.inDeck}</span>
-            </div>
+            {showBudget && (
+              <div className="flex justify-between mt-1.5 text-[9px] text-muted-foreground">
+                <span>Budget: {budget.toFixed(1)}</span>
+                <span>Value: {value.toFixed(1)}</span>
+                <span>Eff: {eff.toFixed(2)}</span>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -130,7 +95,429 @@ function CreatureCardDisplay({ card, compact, onTap, selected }: { card: Creatur
   );
 }
 
-function CardRevealAnimation({ card, onDone }: { card: CreatureCard; onDone: () => void }) {
+// ── Battle Unit on Board ──
+function BoardUnit({ unit, isEnemy, onTap, selected }: { unit: BattleUnit; isEnemy?: boolean; onTap?: () => void; selected?: boolean }) {
+  const rc = RARITY_CONFIG[unit.def.rarity];
+  const statusIcons = unit.statuses.map(s => {
+    switch (s.type) {
+      case 'burn': return '🔥';
+      case 'frost': return '❄️';
+      case 'poison': return '☠️';
+      case 'shield': return '🛡️';
+      case 'bleed': return '🩸';
+      default: return '';
+    }
+  }).join('');
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.9 }}
+      onClick={() => { haptic.light(); onTap?.(); }}
+      className={`p-1.5 rounded-lg cursor-pointer transition-all min-w-[60px] text-center ${selected ? 'ring-2 ring-yellow-400' : ''} ${isEnemy ? 'border border-red-500/30' : 'border border-green-500/30'}`}
+      style={{ background: rc.bg }}
+    >
+      <span className="text-lg">{unit.def.art}</span>
+      <div className="flex items-center justify-center gap-1 text-[9px] mt-0.5">
+        <span className="text-red-400 font-bold">{unit.currentPower}</span>
+        <span className="text-blue-400 font-bold">{unit.currentGuard}</span>
+      </div>
+      {statusIcons && <p className="text-[8px]">{statusIcons}</p>}
+    </motion.div>
+  );
+}
+
+// ── Lane Row ──
+function LaneRow({ label, playerUnits, enemyUnits, onPlayerUnitTap, onEnemyUnitTap, selectedPlayer, selectedEnemy }: {
+  label: string;
+  playerUnits: BattleUnit[];
+  enemyUnits: BattleUnit[];
+  onPlayerUnitTap?: (idx: number) => void;
+  onEnemyUnitTap?: (idx: number) => void;
+  selectedPlayer?: number;
+  selectedEnemy?: number;
+}) {
+  return (
+    <div className="flex items-center gap-1 mb-1">
+      <span className="text-[8px] text-muted-foreground w-8 text-right shrink-0">{label}</span>
+      {/* Enemy side */}
+      <div className="flex-1 flex gap-1 justify-end min-h-[48px] items-center">
+        {enemyUnits.map((u, i) => (
+          <BoardUnit key={u.instanceId} unit={u} isEnemy selected={selectedEnemy === i} onTap={() => onEnemyUnitTap?.(i)} />
+        ))}
+        {enemyUnits.length === 0 && <div className="w-12 h-12 rounded border border-dashed border-red-500/10" />}
+      </div>
+      <div className="w-px h-10 bg-border mx-1" />
+      {/* Player side */}
+      <div className="flex-1 flex gap-1 min-h-[48px] items-center">
+        {playerUnits.map((u, i) => (
+          <BoardUnit key={u.instanceId} unit={u} selected={selectedPlayer === i} onTap={() => onPlayerUnitTap?.(i)} />
+        ))}
+        {playerUnits.length === 0 && <div className="w-12 h-12 rounded border border-dashed border-green-500/10" />}
+      </div>
+    </div>
+  );
+}
+
+// ── Battle Screen ──
+function BattleScreen({ playerFaction, onExit }: { playerFaction: string; onExit: () => void }) {
+  const enemyFaction = useMemo(() => {
+    const others = FACTIONS.filter(f => f !== playerFaction);
+    return others[Math.floor(Math.random() * others.length)];
+  }, [playerFaction]);
+
+  const [battle, setBattle] = useState<BattleState>(() =>
+    createBattleState(buildFactionDeck(playerFaction), buildFactionDeck(enemyFaction))
+  );
+  const [selectedHandIdx, setSelectedHandIdx] = useState<number | null>(null);
+  const [targetLane, setTargetLane] = useState<Lane | null>(null);
+  const [selectedPlayerUnit, setSelectedPlayerUnit] = useState<{ lane: Lane; idx: number } | null>(null);
+  const [selectedEnemyUnit, setSelectedEnemyUnit] = useState<{ lane: Lane; idx: number } | null>(null);
+  const [roundScores, setRoundScores] = useState<{ player: number; enemy: number }>({ player: 0, enemy: 0 });
+  const [battleLog, setBattleLog] = useState<string[]>(['⚔ Battle begins!']);
+
+  const addLog = (msg: string) => setBattleLog(prev => [...prev.slice(-20), msg]);
+
+  const playerScore = boardScore(battle.player.board);
+  const enemyScore = boardScore(battle.enemy.board);
+
+  // Play card from hand
+  const playCard = useCallback((handIdx: number, lane: Lane) => {
+    setBattle(prev => {
+      const card = prev.player.hand[handIdx];
+      if (!card || card.cost > prev.player.energy) return prev;
+
+      const newHand = [...prev.player.hand];
+      newHand.splice(handIdx, 1);
+      const newEnergy = prev.player.energy - card.cost;
+      const cardsPlayed = prev.player.cardsPlayedThisTurn + 1;
+
+      if (card.type === 'unit') {
+        const unit: BattleUnit = {
+          instanceId: `p_${Date.now()}_${Math.random()}`,
+          def: card,
+          currentPower: card.power,
+          currentGuard: card.guard,
+          statuses: [],
+          comboCount: cardsPlayed - 1,
+          lane,
+        };
+        // Apply combo bonus
+        if (cardsPlayed > 1) {
+          const mult = comboMultiplier(cardsPlayed - 1);
+          unit.currentPower = Math.round(card.power * mult);
+          addLog(`${card.name} combo ×${mult.toFixed(2)} → ${unit.currentPower}P`);
+        } else {
+          addLog(`${card.name} deployed to ${lane}`);
+        }
+        const newBoard = { ...prev.player.board };
+        newBoard[lane] = [...newBoard[lane], unit];
+        return { ...prev, player: { ...prev.player, hand: newHand, energy: newEnergy, board: newBoard, cardsPlayedThisTurn: cardsPlayed } };
+      }
+
+      if (card.type === 'spell') {
+        addLog(`${card.name} cast! ${card.abilityDesc}`);
+        // Simple spell: deal abilityValue as damage to strongest enemy
+        const allEnemyUnits = [...prev.enemy.board.front, ...prev.enemy.board.mid, ...prev.enemy.board.back];
+        if (allEnemyUnits.length > 0) {
+          const target = allEnemyUnits.reduce((best, u) => u.currentPower > best.currentPower ? u : best);
+          const dmg = Math.round(card.abilityValue * 0.6);
+          applyDamage(target, dmg);
+          addLog(`→ ${target.def.name} takes ${dmg} damage`);
+          // Clean destroyed
+          const cleanBoard = (board: BoardState): BoardState => ({
+            front: board.front.filter(u => u.currentPower > 0),
+            mid: board.mid.filter(u => u.currentPower > 0),
+            back: board.back.filter(u => u.currentPower > 0),
+          });
+          return { ...prev, player: { ...prev.player, hand: newHand, energy: newEnergy, cardsPlayedThisTurn: cardsPlayed }, enemy: { ...prev.enemy, board: cleanBoard(prev.enemy.board) } };
+        }
+        return { ...prev, player: { ...prev.player, hand: newHand, energy: newEnergy, cardsPlayedThisTurn: cardsPlayed } };
+      }
+
+      if (card.type === 'relic') {
+        addLog(`${card.name} activated! ${card.abilityDesc}`);
+        // Relic: buff all frontline allies
+        const newBoard = { ...prev.player.board };
+        newBoard.front = newBoard.front.map(u => ({ ...u, currentPower: u.currentPower + 1 }));
+        return { ...prev, player: { ...prev.player, hand: newHand, energy: newEnergy, board: newBoard, cardsPlayedThisTurn: cardsPlayed } };
+      }
+
+      return prev;
+    });
+    setSelectedHandIdx(null);
+    setTargetLane(null);
+    haptic.medium();
+  }, []);
+
+  // Clash: player unit vs enemy unit
+  const initiateClash = useCallback(() => {
+    if (!selectedPlayerUnit || !selectedEnemyUnit) return;
+    setBattle(prev => {
+      const pLane = prev.player.board[selectedPlayerUnit.lane];
+      const eLane = prev.enemy.board[selectedEnemyUnit.lane];
+      const attacker = pLane[selectedPlayerUnit.idx];
+      const defender = eLane[selectedEnemyUnit.idx];
+      if (!attacker || !defender) return prev;
+
+      const result = resolveClash(attacker, defender);
+      result.log.forEach(l => addLog(l));
+
+      const cleanLane = (units: BattleUnit[]) => units.filter(u => u.currentPower > 0);
+      const newPlayerBoard = { ...prev.player.board };
+      const newEnemyBoard = { ...prev.enemy.board };
+      newPlayerBoard[selectedPlayerUnit.lane] = cleanLane(newPlayerBoard[selectedPlayerUnit.lane]);
+      newEnemyBoard[selectedEnemyUnit.lane] = cleanLane(newEnemyBoard[selectedEnemyUnit.lane]);
+
+      return { ...prev, player: { ...prev.player, board: newPlayerBoard }, enemy: { ...prev.enemy, board: newEnemyBoard } };
+    });
+    setSelectedPlayerUnit(null);
+    setSelectedEnemyUnit(null);
+    haptic.heavy();
+  }, [selectedPlayerUnit, selectedEnemyUnit]);
+
+  // End turn: AI plays, resolve statuses, new turn
+  const endTurn = useCallback(() => {
+    setBattle(prev => {
+      let newState = { ...prev };
+      addLog('── Your turn ends ──');
+
+      // Tick player statuses
+      const tickBoard = (board: BoardState): BoardState => {
+        const tick = (units: BattleUnit[]) => units.map(u => {
+          const res = tickStatuses(u);
+          if (res.damage > 0) applyDamage(u, res.damage);
+          res.log.forEach(l => addLog(l));
+          return u;
+        }).filter(u => u.currentPower > 0);
+        return { front: tick(board.front), mid: tick(board.mid), back: tick(board.back) };
+      };
+
+      newState.player = { ...newState.player, board: tickBoard(newState.player.board) };
+
+      // AI turn: play cards
+      addLog('── Enemy turn ──');
+      let aiEnergy = newState.enemy.energy;
+      const aiHand = [...newState.enemy.hand];
+      const aiBoard = { ...newState.enemy.board };
+      let aiPlayed = 0;
+      const playable = aiHand.filter(c => c.cost <= aiEnergy && c.type === 'unit').sort((a, b) => b.cost - a.cost);
+
+      for (const card of playable) {
+        if (card.cost > aiEnergy) continue;
+        const lane = card.lane || (['front', 'mid', 'back'] as Lane[])[Math.floor(Math.random() * 3)];
+        aiPlayed++;
+        const unit: BattleUnit = {
+          instanceId: `e_${Date.now()}_${Math.random()}`,
+          def: card,
+          currentPower: Math.round(card.power * comboMultiplier(aiPlayed - 1)),
+          currentGuard: card.guard,
+          statuses: [],
+          comboCount: aiPlayed - 1,
+          lane,
+        };
+        aiBoard[lane] = [...aiBoard[lane], unit];
+        aiEnergy -= card.cost;
+        const idx = aiHand.findIndex(c => c.id === card.id);
+        if (idx !== -1) aiHand.splice(idx, 1);
+        addLog(`Enemy plays ${card.name} → ${lane}`);
+        if (aiEnergy <= 0) break;
+      }
+
+      // AI spells: deal damage to strongest player unit
+      const aiSpells = aiHand.filter(c => c.cost <= aiEnergy && c.type === 'spell');
+      for (const spell of aiSpells) {
+        if (spell.cost > aiEnergy) continue;
+        const allPlayerUnits = [...newState.player.board.front, ...newState.player.board.mid, ...newState.player.board.back];
+        if (allPlayerUnits.length > 0) {
+          const target = allPlayerUnits.reduce((best, u) => u.currentPower > best.currentPower ? u : best);
+          const dmg = Math.round(spell.abilityValue * 0.6);
+          applyDamage(target, dmg);
+          addLog(`Enemy casts ${spell.name} → ${target.def.name} for ${dmg}`);
+          const idx = aiHand.findIndex(c => c.id === spell.id);
+          if (idx !== -1) aiHand.splice(idx, 1);
+          aiEnergy -= spell.cost;
+        }
+      }
+
+      newState.enemy = { ...newState.enemy, hand: aiHand, energy: aiEnergy, board: aiBoard };
+
+      // Clean destroyed from player board
+      newState.player = { ...newState.player, board: tickBoard(newState.player.board) };
+      newState.enemy = { ...newState.enemy, board: tickBoard(newState.enemy.board) };
+
+      // Next turn
+      const nextTurn = prev.turn + 1;
+      const newMaxEnergy = Math.min(10, Math.floor(nextTurn / 2) + 1);
+
+      // Check if round ends (every 5 turns)
+      if (nextTurn % 6 === 0 || nextTurn > 15) {
+        const winner = roundWinner(newState.player.board, newState.enemy.board);
+        addLog(`── Round ${prev.round} → ${winner === 'draw' ? 'Draw!' : winner === 'player' ? 'You win!' : 'Enemy wins!'} ──`);
+        const newScores = { ...roundScores };
+        if (winner === 'player') newScores.player++;
+        else if (winner === 'enemy') newScores.enemy++;
+        setRoundScores(newScores);
+
+        if (prev.round >= prev.maxRounds || newScores.player >= 2 || newScores.enemy >= 2) {
+          const gameWinner = newScores.player > newScores.enemy ? 'player' : newScores.enemy > newScores.player ? 'enemy' : null;
+          addLog(`═══ GAME OVER: ${gameWinner === 'player' ? 'VICTORY!' : gameWinner === 'enemy' ? 'DEFEAT' : 'DRAW'} ═══`);
+          return { ...newState, turn: nextTurn, phase: 'game_over' as const, winner: gameWinner, round: prev.round };
+        }
+
+        // Reset board for next round
+        return {
+          ...newState,
+          turn: nextTurn,
+          round: prev.round + 1,
+          player: { ...newState.player, board: { front: [], mid: [], back: [] }, energy: newMaxEnergy, maxEnergy: newMaxEnergy, cardsPlayedThisTurn: 0 },
+          enemy: { ...newState.enemy, board: { front: [], mid: [], back: [] }, energy: newMaxEnergy, maxEnergy: newMaxEnergy },
+        };
+      }
+
+      // Draw card each turn
+      const pDraw = drawCards(newState.player, 1);
+      const eDraw = drawCards(newState.enemy, 1);
+      if (pDraw.drawn.length) addLog(`You draw ${pDraw.drawn[0].name}`);
+
+      return {
+        ...newState,
+        turn: nextTurn,
+        player: { ...pDraw.state, energy: newMaxEnergy, maxEnergy: newMaxEnergy, cardsPlayedThisTurn: 0 },
+        enemy: { ...eDraw.state, energy: newMaxEnergy, maxEnergy: newMaxEnergy },
+      };
+    });
+    haptic.medium();
+  }, [roundScores]);
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      {/* Battle Header */}
+      <div className="flex items-center justify-between p-2 border-b border-border">
+        <Button variant="ghost" size="sm" onClick={onExit} className="h-8 text-xs">
+          <ArrowLeft size={14} /> Retreat
+        </Button>
+        <div className="text-center">
+          <p className="text-[10px] text-muted-foreground">Turn {battle.turn} · Round {battle.round}/{battle.maxRounds}</p>
+          <p className="text-xs font-bold">
+            <span className="text-green-400">{roundScores.player}</span>
+            <span className="text-muted-foreground"> — </span>
+            <span className="text-red-400">{roundScores.enemy}</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-muted-foreground">Energy</p>
+          <p className="text-xs font-bold text-primary">{battle.player.energy}/{battle.player.maxEnergy} ⚡</p>
+        </div>
+      </div>
+
+      {/* Score Bar */}
+      <div className="flex items-center px-3 py-1.5 bg-muted/30 text-[10px]">
+        <span className="flex-1 text-green-400 font-bold">You: {playerScore} Power</span>
+        <span className="text-muted-foreground">vs</span>
+        <span className="flex-1 text-right text-red-400 font-bold">{FACTION_ICONS[enemyFaction]} {enemyFaction}: {enemyScore}</span>
+      </div>
+
+      {/* Board */}
+      <div className="flex-1 overflow-y-auto px-2 py-1">
+        <div className="text-[8px] text-center text-muted-foreground mb-1">Enemy ← → You</div>
+        {(['front', 'mid', 'back'] as Lane[]).map(lane => (
+          <LaneRow
+            key={lane}
+            label={lane.charAt(0).toUpperCase() + lane.slice(1)}
+            playerUnits={battle.player.board[lane]}
+            enemyUnits={battle.enemy.board[lane]}
+            onPlayerUnitTap={(idx) => setSelectedPlayerUnit(
+              selectedPlayerUnit?.lane === lane && selectedPlayerUnit?.idx === idx ? null : { lane, idx }
+            )}
+            onEnemyUnitTap={(idx) => setSelectedEnemyUnit(
+              selectedEnemyUnit?.lane === lane && selectedEnemyUnit?.idx === idx ? null : { lane, idx }
+            )}
+            selectedPlayer={selectedPlayerUnit?.lane === lane ? selectedPlayerUnit.idx : undefined}
+            selectedEnemy={selectedEnemyUnit?.lane === lane ? selectedEnemyUnit.idx : undefined}
+          />
+        ))}
+
+        {/* Clash button */}
+        {selectedPlayerUnit && selectedEnemyUnit && (
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center my-2">
+            <Button size="sm" onClick={initiateClash} className="bg-red-600 hover:bg-red-700 text-xs">
+              <Swords size={14} /> Clash!
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Lane select when card selected */}
+        {selectedHandIdx !== null && battle.player.hand[selectedHandIdx] && (
+          <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex gap-2 justify-center my-2">
+            {(['front', 'mid', 'back'] as Lane[]).map(lane => (
+              <Button key={lane} size="sm" variant="outline" className="text-[10px] h-7" onClick={() => playCard(selectedHandIdx, lane)}>
+                → {lane}
+              </Button>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Battle Log */}
+        <div className="mt-2 p-2 rounded-lg bg-muted/20 border border-border max-h-20 overflow-y-auto">
+          {battleLog.slice(-6).map((msg, i) => (
+            <p key={i} className="text-[9px] text-muted-foreground">{msg}</p>
+          ))}
+        </div>
+      </div>
+
+      {/* Hand */}
+      <div className="border-t border-border p-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] text-muted-foreground">Hand ({battle.player.hand.length}) · Deck ({battle.player.deck.length})</span>
+          {battle.phase !== 'game_over' && (
+            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={endTurn}>
+              End Turn <ChevronRight size={12} />
+            </Button>
+          )}
+          {battle.phase === 'game_over' && (
+            <Button size="sm" className="h-7 text-[10px]" onClick={onExit}>
+              {battle.winner === 'player' ? '🏆 Victory!' : '💀 Defeat'} — Exit
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {battle.player.hand.map((card, i) => {
+            const canPlay = card.cost <= battle.player.energy && battle.phase !== 'game_over';
+            return (
+              <motion.div
+                key={`${card.id}-${i}`}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  if (!canPlay) return;
+                  haptic.light();
+                  if (card.type !== 'unit') {
+                    playCard(i, 'mid');
+                  } else {
+                    setSelectedHandIdx(selectedHandIdx === i ? null : i);
+                  }
+                }}
+                className={`shrink-0 w-[72px] rounded-lg p-1.5 cursor-pointer transition-all ${selectedHandIdx === i ? 'ring-2 ring-primary -translate-y-2' : ''} ${!canPlay ? 'opacity-40' : ''}`}
+                style={{ background: RARITY_CONFIG[card.rarity].bg }}
+              >
+                <div className="text-center">
+                  <div className="text-[9px] font-bold text-primary">{card.cost}⚡</div>
+                  <div className="text-xl my-0.5">{card.art}</div>
+                  <p className="text-[8px] font-bold text-foreground truncate">{card.name}</p>
+                  {card.type === 'unit' && (
+                    <p className="text-[8px] text-muted-foreground">{card.power}P {card.guard}G</p>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Card Reveal Animation ──
+function CardRevealAnimation({ card, onDone }: { card: CardDef; onDone: () => void }) {
   const [phase, setPhase] = useState<'hidden' | 'flip' | 'glow' | 'done'>('hidden');
   const rc = RARITY_CONFIG[card.rarity];
 
@@ -145,44 +532,25 @@ function CardRevealAnimation({ card, onDone }: { card: CreatureCard; onDone: () 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => { if (phase === 'done') onDone(); }}>
       <AnimatePresence mode="wait">
         {phase === 'hidden' && (
-          <motion.div
-            key="hidden"
-            className="w-48 h-64 rounded-2xl bg-gradient-to-br from-muted to-muted/50 border border-border flex items-center justify-center"
-            animate={{ rotateY: [0, 10, -10, 0] }}
-            transition={{ duration: 0.8, repeat: Infinity }}
-          >
+          <motion.div key="hidden" className="w-48 h-64 rounded-2xl bg-gradient-to-br from-muted to-muted/50 border border-border flex items-center justify-center"
+            animate={{ rotateY: [0, 10, -10, 0] }} transition={{ duration: 0.8, repeat: Infinity }}>
             <Sparkles size={40} className="text-muted-foreground animate-pulse" />
           </motion.div>
         )}
         {phase === 'flip' && (
-          <motion.div
-            key="flip"
-            initial={{ rotateY: 180, scale: 0.5 }}
-            animate={{ rotateY: 0, scale: 1 }}
-            transition={{ duration: 0.8, type: 'spring' }}
-            className="w-48 h-64 rounded-2xl flex items-center justify-center"
-            style={{ background: rc.bg, boxShadow: rc.glow }}
-          >
+          <motion.div key="flip" initial={{ rotateY: 180, scale: 0.5 }} animate={{ rotateY: 0, scale: 1 }}
+            transition={{ duration: 0.8, type: 'spring' }} className="w-48 h-64 rounded-2xl flex items-center justify-center"
+            style={{ background: rc.bg, boxShadow: rc.glow }}>
             <span className="text-6xl">{card.art}</span>
           </motion.div>
         )}
         {(phase === 'glow' || phase === 'done') && (
-          <motion.div
-            key="reveal"
-            initial={{ scale: 1.2 }}
-            animate={{ scale: 1 }}
-            className="w-56"
-          >
-            <motion.div
-              animate={{ boxShadow: [rc.glow, `0 0 40px ${rc.color}`, rc.glow] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="rounded-2xl"
-            >
-              <CreatureCardDisplay card={card} />
+          <motion.div key="reveal" initial={{ scale: 1.2 }} animate={{ scale: 1 }} className="w-56">
+            <motion.div animate={{ boxShadow: [rc.glow, `0 0 40px ${rc.color}`, rc.glow] }}
+              transition={{ duration: 2, repeat: Infinity }} className="rounded-2xl">
+              <MiniCard card={card} />
             </motion.div>
-            {phase === 'done' && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs text-muted-foreground mt-4">Tap to continue</motion.p>
-            )}
+            {phase === 'done' && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-xs text-muted-foreground mt-4">Tap to continue</motion.p>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -191,65 +559,57 @@ function CardRevealAnimation({ card, onDone }: { card: CreatureCard; onDone: () 
 }
 
 // ── Main Component ──
-interface CardArenaProps {
-  onBack: () => void;
-}
+interface CardArenaProps { onBack: () => void; }
 
 export default function CardArena({ onBack }: CardArenaProps) {
   const [tab, setTab] = useState<ArenaTab>('collection');
-  const [cards, setCards] = useState<CreatureCard[]>(SAMPLE_CARDS);
-  const [deck, setDeck] = useState<Deck>({ id: 'd1', name: 'Main Deck', cards: SAMPLE_CARDS.filter(c => c.inDeck > 0).map(c => c.id), maxSize: 12 });
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
-  const [revealCard, setRevealCard] = useState<CreatureCard | null>(null);
+  const [revealCard, setRevealCard] = useState<CardDef | null>(null);
   const [filterRarity, setFilterRarity] = useState<CardRarity | 'all'>('all');
-  const [filterElement, setFilterElement] = useState<CardElement | 'all'>('all');
+  const [filterFaction, setFilterFaction] = useState<string | 'all'>('all');
+  const [showBudget, setShowBudget] = useState(false);
+  const [deckFaction, setDeckFaction] = useState<string>('Ironclad');
+  const [inBattle, setInBattle] = useState(false);
 
-  const filteredCards = useMemo(() => {
-    return cards.filter(c => {
+  const filteredCards = useMemo(() =>
+    STARTER_CARDS.filter(c => {
       if (filterRarity !== 'all' && c.rarity !== filterRarity) return false;
-      if (filterElement !== 'all' && c.element !== filterElement) return false;
+      if (filterFaction !== 'all' && c.faction !== filterFaction) return false;
       return true;
-    });
-  }, [cards, filterRarity, filterElement]);
+    }),
+  [filterRarity, filterFaction]);
 
-  const deckCards = useMemo(() => deck.cards.map(id => cards.find(c => c.id === id)!).filter(Boolean), [deck, cards]);
-
-  const addToDeck = useCallback((cardId: string) => {
-    if (deck.cards.length >= deck.maxSize) return;
-    haptic.light();
-    setDeck(d => ({ ...d, cards: [...d.cards, cardId] }));
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, inDeck: c.inDeck + 1 } : c));
-  }, [deck]);
-
-  const removeFromDeck = useCallback((cardId: string) => {
-    haptic.light();
-    const idx = deck.cards.indexOf(cardId);
-    if (idx === -1) return;
-    setDeck(d => ({ ...d, cards: d.cards.filter((_, i) => i !== idx) }));
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, inDeck: Math.max(0, c.inDeck - 1) } : c));
-  }, [deck]);
+  const deckCards = useMemo(() => STARTER_CARDS.filter(c => c.faction === deckFaction), [deckFaction]);
 
   const simulateReveal = useCallback(() => {
     haptic.heavy();
-    const pool = SAMPLE_CARDS;
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    setRevealCard({ ...pick, id: `c_${Date.now()}`, owned: 1, inDeck: 0 });
+    const weights: Record<CardRarity, number> = { common: 40, uncommon: 25, rare: 18, epic: 10, legendary: 5, mythic: 2 };
+    const total = Object.values(weights).reduce((s, w) => s + w, 0);
+    let roll = Math.random() * total;
+    let pickedRarity: CardRarity = 'common';
+    for (const [r, w] of Object.entries(weights) as [CardRarity, number][]) {
+      roll -= w;
+      if (roll <= 0) { pickedRarity = r; break; }
+    }
+    const pool = STARTER_CARDS.filter(c => c.rarity === pickedRarity);
+    const pick = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : STARTER_CARDS[0];
+    setRevealCard({ ...pick, id: `reveal_${Date.now()}` });
   }, []);
+
+  if (inBattle) {
+    return <BattleScreen playerFaction={deckFaction} onExit={() => setInBattle(false)} />;
+  }
 
   const tabs: { id: ArenaTab; label: string; icon: React.ReactNode }[] = [
     { id: 'collection', label: 'Cards', icon: <Layers size={16} /> },
     { id: 'deck', label: 'Deck', icon: <Shield size={16} /> },
-    { id: 'arena', label: 'Arena', icon: <Trophy size={16} /> },
-    { id: 'reveal', label: 'Open', icon: <Sparkles size={16} /> },
+    { id: 'battle', label: 'Battle', icon: <Swords size={16} /> },
+    { id: 'open', label: 'Open', icon: <Sparkles size={16} /> },
   ];
 
   return (
     <div className="flex flex-col h-full bg-background">
-      {/* Reveal Overlay */}
-      {revealCard && <CardRevealAnimation card={revealCard} onDone={() => {
-        setCards(prev => [...prev, revealCard]);
-        setRevealCard(null);
-      }} />}
+      {revealCard && <CardRevealAnimation card={revealCard} onDone={() => setRevealCard(null)} />}
 
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
@@ -260,18 +620,15 @@ export default function CardArena({ onBack }: CardArenaProps) {
           <h1 className="text-base font-bold text-foreground flex items-center gap-2">
             <Layers size={18} className="text-orange-400" /> Card Arena
           </h1>
-          <p className="text-[10px] text-muted-foreground">{cards.length} cards · {deck.cards.length}/{deck.maxSize} in deck</p>
+          <p className="text-[10px] text-muted-foreground">{STARTER_CARDS.length} cards · 3 factions · Budget B={BALANCE_CONSTANT}</p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-border">
         {tabs.map(t => (
-          <button
-            key={t.id}
-            onClick={() => { haptic.light(); setTab(t.id); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${tab === t.id ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}
-          >
+          <button key={t.id} onClick={() => { haptic.light(); setTab(t.id); }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${tab === t.id ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
             {t.icon}{t.label}
           </button>
         ))}
@@ -283,226 +640,153 @@ export default function CardArena({ onBack }: CardArenaProps) {
           {tab === 'collection' && (
             <motion.div key="collection" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {/* Filters */}
-              <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+              <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+                {(['all', ...FACTIONS] as const).map(f => (
+                  <button key={f} onClick={() => setFilterFaction(f)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap ${filterFaction === f ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {f === 'all' ? '🌀 All' : `${FACTION_ICONS[f]} ${f}`}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
                 {(['all', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'] as const).map(r => (
-                  <button
-                    key={r}
-                    onClick={() => setFilterRarity(r)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${filterRarity === r ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                  >
+                  <button key={r} onClick={() => setFilterRarity(r)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap ${filterRarity === r ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                     {r === 'all' ? 'All' : RARITY_CONFIG[r].label}
                   </button>
                 ))}
               </div>
-              <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-                {(['all', 'fire', 'water', 'earth', 'air', 'shadow', 'light'] as const).map(e => (
-                  <button
-                    key={e}
-                    onClick={() => setFilterElement(e)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${filterElement === e ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-                  >
-                    {e === 'all' ? '🌀 All' : `${ELEMENT_ICONS[e]} ${e.charAt(0).toUpperCase() + e.slice(1)}`}
-                  </button>
-                ))}
+              <div className="flex justify-end mb-2">
+                <button onClick={() => setShowBudget(!showBudget)} className="text-[9px] text-muted-foreground underline">
+                  {showBudget ? 'Hide' : 'Show'} Balance Stats
+                </button>
               </div>
-              {/* Grid */}
               <div className="grid grid-cols-2 gap-2.5">
                 {filteredCards.map(card => (
-                  <CreatureCardDisplay
-                    key={card.id}
-                    card={card}
-                    selected={selectedCard === card.id}
-                    onTap={() => {
-                      setSelectedCard(card.id === selectedCard ? null : card.id);
-                    }}
-                  />
+                  <MiniCard key={card.id} card={card} selected={selectedCard === card.id} showBudget={showBudget}
+                    onTap={() => setSelectedCard(card.id === selectedCard ? null : card.id)} />
                 ))}
               </div>
-              {filteredCards.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground text-sm">No cards match filters</div>
-              )}
-              {/* Selected card action */}
-              {selectedCard && (
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="sticky bottom-0 mt-3 p-3 rounded-xl bg-card border border-border flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={() => addToDeck(selectedCard)} disabled={deck.cards.length >= deck.maxSize}>
-                    <Plus size={14} /> Add to Deck
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => removeFromDeck(selectedCard)}>
-                    <Minus size={14} /> Remove
-                  </Button>
-                </motion.div>
-              )}
             </motion.div>
           )}
 
           {tab === 'deck' && (
             <motion.div key="deck" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-foreground">{deck.name}</h2>
-                <Badge variant="outline">{deck.cards.length}/{deck.maxSize}</Badge>
+                <h2 className="text-sm font-bold text-foreground">Choose Faction</h2>
               </div>
-              {/* Deck power stats */}
+              <div className="flex gap-2 mb-4">
+                {FACTIONS.map(f => (
+                  <button key={f} onClick={() => { haptic.light(); setDeckFaction(f); }}
+                    className={`flex-1 p-3 rounded-xl text-center transition-all ${deckFaction === f ? 'bg-primary/20 border-2 border-primary' : 'bg-muted border border-border'}`}>
+                    <span className="text-2xl">{FACTION_ICONS[f]}</span>
+                    <p className="text-[10px] font-bold text-foreground mt-1">{f}</p>
+                  </button>
+                ))}
+              </div>
               <Card className="mb-3">
                 <CardContent className="p-3">
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div>
-                      <p className="text-lg font-bold text-red-400">{deckCards.reduce((s, c) => s + c.attack, 0)}</p>
-                      <p className="text-[10px] text-muted-foreground">Total ATK</p>
+                      <p className="text-lg font-bold text-red-400">{deckCards.reduce((s, c) => s + c.power, 0)}</p>
+                      <p className="text-[10px] text-muted-foreground">Total Power</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-blue-400">{deckCards.reduce((s, c) => s + c.defense, 0)}</p>
-                      <p className="text-[10px] text-muted-foreground">Total DEF</p>
+                      <p className="text-lg font-bold text-blue-400">{deckCards.reduce((s, c) => s + c.guard, 0)}</p>
+                      <p className="text-[10px] text-muted-foreground">Total Guard</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-green-400">{deckCards.reduce((s, c) => s + c.health, 0)}</p>
-                      <p className="text-[10px] text-muted-foreground">Total HP</p>
+                      <p className="text-lg font-bold text-yellow-400">{deckCards.reduce((s, c) => s + c.cost, 0)}</p>
+                      <p className="text-[10px] text-muted-foreground">Total Cost</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              {/* Deck cards */}
-              {deckCards.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-sm">Deck is empty — add cards from your collection</div>
-              ) : (
-                <div className="space-y-2">
-                  {deckCards.map((card, i) => (
-                    <motion.div
-                      key={`${card.id}-${i}`}
-                      layout
-                      className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border"
-                    >
-                      <span className="text-2xl">{card.art}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-foreground truncate">{card.name}</p>
-                        <div className="flex gap-2 text-[10px] text-muted-foreground">
-                          <span style={{ color: RARITY_CONFIG[card.rarity].color }}>{RARITY_CONFIG[card.rarity].label}</span>
-                          <span>{ELEMENT_ICONS[card.element]}</span>
-                          <span>⚔{card.attack} 🛡{card.defense} ❤{card.health}</span>
-                        </div>
+              <div className="space-y-2">
+                {deckCards.map(card => (
+                  <div key={card.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-card border border-border">
+                    <span className="text-2xl">{card.art}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-foreground truncate">{card.name}</p>
+                      <div className="flex gap-2 text-[10px] text-muted-foreground">
+                        <span style={{ color: RARITY_CONFIG[card.rarity].color }}>{RARITY_CONFIG[card.rarity].label}</span>
+                        <span>{TYPE_ICONS[card.type]} {card.type}</span>
+                        <span>{card.cost}⚡ {card.power}P {card.guard}G</span>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFromDeck(card.id)}>
-                        <Minus size={14} />
-                      </Button>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {tab === 'arena' && (
-            <motion.div key="arena" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h2 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Trophy size={16} className="text-yellow-400" /> Active Tournaments</h2>
-              <div className="space-y-2.5">
-                {SAMPLE_TOURNAMENTS.map(t => {
-                  const rc = RARITY_CONFIG[t.tier];
-                  const full = t.participants >= t.maxParticipants;
-                  const hoursLeft = Math.max(0, Math.floor((t.endsAt - Date.now()) / 3600000));
-                  return (
-                    <Card key={t.id} className="overflow-hidden">
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="text-sm font-bold text-foreground">{t.name}</p>
-                            <p className="text-[10px]" style={{ color: rc.color }}>{rc.label} Tier</p>
-                          </div>
-                          <Badge variant={t.status === 'open' ? 'default' : 'secondary'} className="text-[10px]">
-                            {t.status === 'open' ? 'Open' : t.status === 'in_progress' ? 'Live' : 'Ended'}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 text-center mb-3">
-                          <div className="p-1.5 rounded bg-muted">
-                            <p className="text-xs font-bold text-foreground">{t.entryFee}</p>
-                            <p className="text-[9px] text-muted-foreground">Entry Fee</p>
-                          </div>
-                          <div className="p-1.5 rounded bg-muted">
-                            <p className="text-xs font-bold text-yellow-400">{t.prizePool}</p>
-                            <p className="text-[9px] text-muted-foreground">Prize</p>
-                          </div>
-                          <div className="p-1.5 rounded bg-muted">
-                            <p className="text-xs font-bold text-foreground">{t.participants}/{t.maxParticipants}</p>
-                            <p className="text-[9px] text-muted-foreground">Players</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">{hoursLeft}h remaining</span>
-                          <Button size="sm" disabled={full || t.status !== 'open' || deck.cards.length < 5} onClick={() => haptic.medium()} className="h-8 text-xs">
-                            {full ? <><Lock size={12} /> Full</> : <><Swords size={12} /> Enter</>}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* Quick Match */}
-              <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-center">
-                <Crown size={28} className="text-primary mx-auto mb-2" />
-                <p className="text-sm font-bold text-foreground">Quick Match</p>
-                <p className="text-[10px] text-muted-foreground mb-3">Battle a random opponent with your current deck</p>
-                <Button size="sm" disabled={deck.cards.length < 5} onClick={() => haptic.heavy()}>
-                  <Swords size={14} /> Find Opponent
-                </Button>
-                {deck.cards.length < 5 && <p className="text-[10px] text-destructive mt-2">Need at least 5 cards in deck</p>}
+                    </div>
+                  </div>
+                ))}
               </div>
             </motion.div>
           )}
 
-          {tab === 'reveal' && (
-            <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+          {tab === 'battle' && (
+            <motion.div key="battle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
               <div className="py-8">
-                <motion.div
-                  animate={{ rotateY: [0, 360] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                  className="inline-block text-6xl mb-4"
-                >
-                  🃏
-                </motion.div>
-                <h2 className="text-lg font-bold text-foreground mb-1">Card Packs</h2>
-                <p className="text-xs text-muted-foreground mb-6">Open packs to discover new creatures</p>
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="text-6xl mb-4">⚔</motion.div>
+                <h2 className="text-lg font-bold text-foreground mb-1">Enter Battle</h2>
+                <p className="text-xs text-muted-foreground mb-2">3-lane board · Best of 3 rounds · Energy scaling</p>
+                <p className="text-[10px] text-muted-foreground mb-6">
+                  Playing as {FACTION_ICONS[deckFaction]} <strong>{deckFaction}</strong>
+                </p>
               </div>
 
+              <Card className="mb-4 text-left">
+                <CardContent className="p-4">
+                  <h3 className="text-xs font-bold text-foreground mb-2">Combat Formulas Active</h3>
+                  <div className="space-y-1 text-[10px] text-muted-foreground">
+                    <p>⚡ Budget = Cost × {BALANCE_CONSTANT} + Rarity Bonus</p>
+                    <p>🔥 Combo = Base × (1 + 0.25 × chain)</p>
+                    <p>⚔ Clash = mutual Power damage through Guard</p>
+                    <p>💥 Crit = 5% base, ×1.5 damage, 35% cap</p>
+                    <p>🌊 Element advantage = +25% damage</p>
+                    <p>🔥❄️☠️🩸 Status ticks: burn/frost/poison/bleed</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Button size="lg" onClick={() => { haptic.heavy(); setInBattle(true); }} className="w-full">
+                <Swords size={18} /> Start Battle
+              </Button>
+            </motion.div>
+          )}
+
+          {tab === 'open' && (
+            <motion.div key="open" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+              <div className="py-8">
+                <motion.div animate={{ rotateY: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="inline-block text-6xl mb-4">🃏</motion.div>
+                <h2 className="text-lg font-bold text-foreground mb-1">Card Packs</h2>
+                <p className="text-xs text-muted-foreground mb-6">Weighted rarity · Common 40% → Mythic 2%</p>
+              </div>
               <div className="space-y-3">
-                {/* Standard Pack */}
                 <Card className="text-left">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="text-3xl">📦</div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-foreground">Standard Pack</p>
-                      <p className="text-[10px] text-muted-foreground">1 card · Guaranteed Uncommon+</p>
+                      <p className="text-[10px] text-muted-foreground">1 card · Full rarity pool</p>
                     </div>
-                    <Button size="sm" onClick={simulateReveal}>
-                      <Star size={14} /> 500
-                    </Button>
+                    <Button size="sm" onClick={simulateReveal}><Star size={14} /> 500</Button>
                   </CardContent>
                 </Card>
-
-                {/* Premium Pack */}
                 <Card className="text-left border-yellow-500/30">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="text-3xl">🎁</div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-foreground">Premium Pack</p>
-                      <p className="text-[10px] text-muted-foreground">1 card · Guaranteed Rare+</p>
+                      <p className="text-[10px] text-muted-foreground">1 card · Rare+ guaranteed</p>
                     </div>
-                    <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700" onClick={simulateReveal}>
-                      <Crown size={14} /> 2,000
-                    </Button>
+                    <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700" onClick={simulateReveal}><Crown size={14} /> 2,000</Button>
                   </CardContent>
                 </Card>
-
-                {/* Mythic Pack */}
                 <Card className="text-left border-pink-500/30">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="text-3xl">💎</div>
                     <div className="flex-1">
                       <p className="text-sm font-bold text-foreground">Mythic Pack</p>
-                      <p className="text-[10px] text-muted-foreground">1 card · Guaranteed Epic+ · Mythic chance</p>
+                      <p className="text-[10px] text-muted-foreground">1 card · Epic+ · Mythic chance</p>
                     </div>
-                    <Button size="sm" className="bg-pink-600 hover:bg-pink-700" onClick={simulateReveal}>
-                      <Sparkles size={14} /> 5,000
-                    </Button>
+                    <Button size="sm" className="bg-pink-600 hover:bg-pink-700" onClick={simulateReveal}><Sparkles size={14} /> 5,000</Button>
                   </CardContent>
                 </Card>
               </div>
