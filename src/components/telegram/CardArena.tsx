@@ -542,6 +542,15 @@ export default function CardArena({ onBack }: CardArenaProps) {
   const [inBattle, setInBattle] = useState(false);
   const [packResults, setPackResults] = useState<PackResult | null>(null);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [tournament, setTournament] = useState<TournamentMatch[] | null>(null);
+  const [tournamentRound, setTournamentRound] = useState(0);
+  const [tournamentEnemy, setTournamentEnemy] = useState<string | null>(null);
+  const [tournamentDifficulty, setTournamentDifficulty] = useState(1);
+  const [lastRewardMsg, setLastRewardMsg] = useState<string | null>(null);
+
+  // Load bred cards from Creature Lab
+  const bredCards = useMemo(() => loadBredCards(), [state]);
+  const allCards = useMemo(() => [...STARTER_CARDS, ...bredCards], [bredCards]);
 
   // Save on change
   useEffect(() => { saveState(state); }, [state]);
@@ -549,32 +558,27 @@ export default function CardArena({ onBack }: CardArenaProps) {
   const ownedIds = useMemo(() => new Set(state.ownedCards.map(o => o.cardId)), [state.ownedCards]);
 
   const filteredCards = useMemo(() =>
-    STARTER_CARDS.filter(c => {
+    allCards.filter(c => {
       if (filterRarity !== 'all' && c.rarity !== filterRarity) return false;
       if (filterFaction !== 'all' && c.faction !== filterFaction) return false;
       return true;
     }),
-  [filterRarity, filterFaction]);
+  [allCards, filterRarity, filterFaction]);
 
-  const progress = collectionProgress(state.ownedCards, STARTER_CARDS.length);
+  const progress = collectionProgress(state.ownedCards, allCards.length);
 
   // Open pack
   const handleOpenPack = useCallback((packType: 'standard' | 'premium' | 'mythic') => {
     const pity = state.pityCounters[packType] || 0;
     const results = openPack(STARTER_CARDS, state.ownedCards, packType, pity);
-
-    // Add cards to collection
     const newOwned = [...state.ownedCards];
-    results.cards.forEach((card, i) => {
+    results.cards.forEach((card) => {
       const existing = newOwned.find(o => o.cardId === card.id);
       if (existing) { existing.copies++; }
       else { newOwned.push({ cardId: card.id, copies: 1, foil: false, animated: false, firstObtained: Date.now(), source: 'pack' }); }
     });
-
     setState(prev => ({
-      ...prev,
-      ownedCards: newOwned,
-      dust: prev.dust + results.dust,
+      ...prev, ownedCards: newOwned, dust: prev.dust + results.dust,
       pityCounters: { ...prev.pityCounters, [packType]: results.pityReset ? 0 : pity + 5 },
       totalPacks: prev.totalPacks + 1,
     }));
@@ -596,26 +600,77 @@ export default function CardArena({ onBack }: CardArenaProps) {
 
   // Disenchant
   const handleDisenchant = useCallback((cardId: string) => {
-    const card = STARTER_CARDS.find(c => c.id === cardId);
+    const card = allCards.find(c => c.id === cardId);
     const owned = state.ownedCards.find(o => o.cardId === cardId);
     if (!card || !owned || owned.copies <= 1) return;
     owned.copies--;
     setState(prev => ({ ...prev, ownedCards: [...prev.ownedCards], dust: prev.dust + disenchantValue(card.rarity) }));
     haptic.light();
-  }, [state]);
+  }, [state, allCards]);
 
-  // Battle rewards
-  const handleBattleRewards = useCallback((won: boolean, rounds: number) => {
-    const rewards = calculateBattleRewards(won, rounds, 1);
-    setState(prev => ({
-      ...prev,
-      dust: prev.dust + rewards.dust,
-      seasonPassTier: prev.seasonPassTier + (won ? 1 : 0),
-    }));
+  // Battle rewards with enemy faction card drops
+  const handleBattleRewards = useCallback((won: boolean, rounds: number, enemyFaction: string) => {
+    const rewards = calculateBattleRewards(won, rounds, tournamentDifficulty);
+    const msgs: string[] = [`+${rewards.dust} dust, +${rewards.xp} XP`];
+
+    // Card drop from enemy faction
+    let droppedCard: CardDef | null = null;
+    if (Math.random() < rewards.cardChance) {
+      const enemyPool = STARTER_CARDS.filter(c => c.faction === enemyFaction);
+      if (enemyPool.length > 0) {
+        droppedCard = enemyPool[Math.floor(Math.random() * enemyPool.length)];
+        msgs.push(`🃏 Discovered: ${droppedCard.name}!`);
+      }
+    }
+
+    setState(prev => {
+      const newOwned = [...prev.ownedCards];
+      if (droppedCard) {
+        const existing = newOwned.find(o => o.cardId === droppedCard!.id);
+        if (existing) existing.copies++;
+        else newOwned.push({ cardId: droppedCard.id, copies: 1, foil: false, animated: false, firstObtained: Date.now(), source: 'battle' });
+      }
+      return {
+        ...prev,
+        ownedCards: newOwned,
+        dust: prev.dust + rewards.dust,
+        gems: prev.gems + (won ? Math.round(tournamentDifficulty * 5) : 0),
+        seasonPassTier: prev.seasonPassTier + (won ? 1 : 0),
+      };
+    });
+    setLastRewardMsg(msgs.join(' · '));
+
+    // Update tournament state if in tournament
+    if (tournament) {
+      setTournament(prev => {
+        if (!prev) return null;
+        return prev.map((m, i) => {
+          if (i === tournamentRound) return { ...m, status: won ? 'won' as const : 'lost' as const };
+          if (i === tournamentRound + 1 && won) return { ...m, status: 'upcoming' as const };
+          return m;
+        });
+      });
+      if (won && tournamentRound < 2) {
+        setTournamentRound(r => r + 1);
+      }
+    }
+  }, [tournament, tournamentRound, tournamentDifficulty]);
+
+  // Start tournament battle
+  const startTournamentBattle = useCallback((match: TournamentMatch) => {
+    setTournamentEnemy(match.enemyFaction);
+    setTournamentDifficulty(match.difficulty);
+    setInBattle(true);
   }, []);
 
   if (inBattle) {
-    return <BattleScreen playerFaction={deckFaction} onExit={() => setInBattle(false)} onRewards={handleBattleRewards} />;
+    return <BattleScreen
+      playerFaction={deckFaction}
+      onExit={() => { setInBattle(false); setTournamentEnemy(null); }}
+      onRewards={handleBattleRewards}
+      forcedEnemy={tournamentEnemy || undefined}
+      difficulty={tournamentDifficulty}
+    />;
   }
 
   const tabs: { id: ArenaTab; label: string; icon: React.ReactNode }[] = [
