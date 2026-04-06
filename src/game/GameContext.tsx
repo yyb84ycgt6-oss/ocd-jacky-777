@@ -75,7 +75,13 @@ function loadState(): GameState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const state = JSON.parse(raw) as GameState;
+    // Verify state integrity — if tampered, prefer cloud save
+    if (!verifyStateIntegrity(state)) {
+      console.warn('[GameContext] State integrity check failed — local state may be tampered');
+      // Don't reject outright; cloud sync will reconcile
+    }
+    return state;
   } catch { return null; }
 }
 
