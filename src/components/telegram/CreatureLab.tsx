@@ -85,21 +85,18 @@ export default function CreatureLab({ onBack }: CreatureLabProps) {
       const CARD_STORAGE = 'card_arena_state';
       const raw = localStorage.getItem(CARD_STORAGE);
       const cardState = raw ? JSON.parse(raw) : { ownedCards: [], dust: 200, gems: 50, eventTokens: 0, pityCounter: 0, seasonTier: 0, seasonXp: 0 };
-      {
-        const alreadyOwned = cardState.ownedCards?.some((o: { cardId: string }) => o.cardId === cardDef.id);
-        if (!alreadyOwned) {
-          cardState.ownedCards = cardState.ownedCards || [];
-          cardState.ownedCards.push({
-            cardId: cardDef.id, copies: 1, foil: false, animated: false,
-            firstObtained: Date.now(), source: 'battle',
-          });
-          // Store the bred card definition for Card Arena to pick up
-          const bredCards = JSON.parse(localStorage.getItem('bred_card_defs') || '[]');
-          bredCards.push(cardDef);
-          localStorage.setItem('bred_card_defs', JSON.stringify(bredCards));
-          localStorage.setItem(CARD_STORAGE, JSON.stringify(cardState));
-          toast.success(`🃏 Card "${cardDef.name}" added to your Card Arena collection!`);
-        }
+      const alreadyOwned = cardState.ownedCards?.some((o: { cardId: string }) => o.cardId === cardDef.id);
+      if (!alreadyOwned) {
+        cardState.ownedCards = cardState.ownedCards || [];
+        cardState.ownedCards.push({
+          cardId: cardDef.id, copies: 1, foil: false, animated: false,
+          firstObtained: Date.now(), source: 'battle',
+        });
+        const bredCards = JSON.parse(localStorage.getItem('bred_card_defs') || '[]');
+        bredCards.push(cardDef);
+        localStorage.setItem('bred_card_defs', JSON.stringify(bredCards));
+        localStorage.setItem(CARD_STORAGE, JSON.stringify(cardState));
+        toast.success(`🃏 Card "${cardDef.name}" added to your Card Arena collection!`);
       }
     } catch {}
   };
