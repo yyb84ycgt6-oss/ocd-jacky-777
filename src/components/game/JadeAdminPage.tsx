@@ -48,7 +48,7 @@ function ABTestPanel({ pack, variants, onChange }: {
   const fields: { key: ABVariant['field']; label: string }[] = [
     { key: 'name', label: 'Name' },
     { key: 'subtitle', label: 'Subtitle' },
-    { key: 'priceDiamonds', label: 'Price (Gold)' },
+    { key: 'priceDiamonds', label: 'Price (💎)' },
     { key: 'emotionalHook', label: 'Hook' },
   ];
 
@@ -149,7 +149,7 @@ function AdminPackRow({ pack, adminState, onUpdate, onDuplicate, expanded, onTog
               </div>
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="text-[9px] text-muted-foreground">{catMeta.icon} {pack.priceTier}</span>
-                <span className="text-[9px] font-semibold text-foreground">{pack.priceDiamonds.toLocaleString()}g</span>
+                <span className="text-[9px] font-semibold text-foreground">{pack.priceDiamonds.toLocaleString()}💎</span>
               </div>
             </div>
           </button>
