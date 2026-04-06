@@ -84,8 +84,8 @@ export default function CreatureLab({ onBack }: CreatureLabProps) {
       const cardDef = creatureToCard(result.child);
       const CARD_STORAGE = 'card_arena_state';
       const raw = localStorage.getItem(CARD_STORAGE);
-      if (raw) {
-        const cardState = JSON.parse(raw);
+      const cardState = raw ? JSON.parse(raw) : { ownedCards: [], dust: 200, gems: 50, eventTokens: 0, pityCounter: 0, seasonTier: 0, seasonXp: 0 };
+      {
         const alreadyOwned = cardState.ownedCards?.some((o: { cardId: string }) => o.cardId === cardDef.id);
         if (!alreadyOwned) {
           cardState.ownedCards = cardState.ownedCards || [];
