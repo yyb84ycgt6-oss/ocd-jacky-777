@@ -610,10 +610,26 @@ export default function CardArena({ onBack }: CardArenaProps) {
     haptic.light();
   }, [state, allCards]);
 
-  // Battle rewards with enemy faction card drops
+  // Diamond rewards based on difficulty: quick=1, round1=3, round2=8, round3=15, champion=50
+  const DIAMOND_REWARDS = [0, 3, 8, 15]; // indexed by tournamentDifficulty (0=quick match)
+  const CHAMPION_BONUS = 35;
+
+  // Battle rewards with enemy faction card drops + diamonds
   const handleBattleRewards = useCallback((won: boolean, rounds: number, enemyFaction: string) => {
     const rewards = calculateBattleRewards(won, rounds, tournamentDifficulty);
     const msgs: string[] = [`+${rewards.dust} dust, +${rewards.xp} XP`];
+
+    // Diamond calculation
+    let diamondReward = 0;
+    if (won) {
+      diamondReward = tournament
+        ? (DIAMOND_REWARDS[tournamentDifficulty] || 1)
+        : 1; // Quick match = 1 diamond
+    }
+
+    if (diamondReward > 0) {
+      msgs.push(`+${diamondReward} 💎`);
+    }
 
     // Card drop from enemy faction
     let droppedCard: CardDef | null = null;
@@ -640,10 +656,25 @@ export default function CardArena({ onBack }: CardArenaProps) {
         seasonPassTier: prev.seasonPassTier + (won ? 1 : 0),
       };
     });
+
+    // Grant diamonds to game state
+    if (diamondReward > 0) {
+      setGameState(prev => ({
+        ...prev,
+        resources: { ...prev.resources, diamonds: (prev.resources.diamonds || 0) + diamondReward },
+      }));
+    }
+
+    // Grant battle pass XP
+    if (won) {
+      addBattlePassXP(rewards.xp || 25, `Card Arena ${tournament ? 'tournament' : 'quick match'}`);
+    }
+
     setLastRewardMsg(msgs.join(' · '));
 
     // Update tournament state if in tournament
     if (tournament) {
+      const isChampion = won && tournamentRound === 2;
       setTournament(prev => {
         if (!prev) return null;
         return prev.map((m, i) => {
@@ -655,8 +686,17 @@ export default function CardArena({ onBack }: CardArenaProps) {
       if (won && tournamentRound < 2) {
         setTournamentRound(r => r + 1);
       }
+      // Champion bonus
+      if (isChampion) {
+        setGameState(prev => ({
+          ...prev,
+          resources: { ...prev.resources, diamonds: (prev.resources.diamonds || 0) + CHAMPION_BONUS },
+        }));
+        addBattlePassXP(50, 'Tournament Champion');
+        toast.success(`🏆 Tournament Champion! +${CHAMPION_BONUS} 💎 bonus!`);
+      }
     }
-  }, [tournament, tournamentRound, tournamentDifficulty]);
+  }, [tournament, tournamentRound, tournamentDifficulty, setGameState, addBattlePassXP]);
 
   // Start tournament battle
   const startTournamentBattle = useCallback((match: TournamentMatch) => {
