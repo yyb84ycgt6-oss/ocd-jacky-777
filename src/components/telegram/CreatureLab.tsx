@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { haptic, telegramConfirm } from '@/lib/telegram';
 import AnimatedCanvas from '@/components/backgrounds/AnimatedCanvas';
 import {
-  createCreature, breedCreatures, SPECIES_META, RARITY_CONFIG,
+  createCreature, breedCreatures, creatureToCard, SPECIES_META, RARITY_CONFIG,
   type Creature, type CreatureSpecies, type CreatureRarity
 } from '@/game/creatureSystem';
 import {
