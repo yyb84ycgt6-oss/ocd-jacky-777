@@ -677,6 +677,7 @@ export default function CardArena({ onBack }: CardArenaProps) {
     { id: 'collection', label: 'Cards', icon: <Layers size={14} /> },
     { id: 'codex', label: 'Codex', icon: <BookOpen size={14} /> },
     { id: 'battle', label: 'Battle', icon: <Swords size={14} /> },
+    { id: 'tournament', label: 'Tourney', icon: <Trophy size={14} /> },
     { id: 'packs', label: 'Packs', icon: <Gift size={14} /> },
     { id: 'craft', label: 'Craft', icon: <Flame size={14} /> },
     { id: 'economy', label: 'Info', icon: <Archive size={14} /> },
