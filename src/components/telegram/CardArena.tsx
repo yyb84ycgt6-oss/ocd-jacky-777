@@ -8,8 +8,9 @@ import { haptic } from '@/lib/telegram';
 import {
   ArrowLeft, Layers, Swords, Trophy, Star, Sparkles, Crown,
   Shield, Zap, Heart, Plus, Minus, ChevronRight, BookOpen,
-  Gift, Archive, Flame, Droplets,
+  Gift, Archive, Flame, Droplets, Diamond,
 } from 'lucide-react';
+import { useGame } from '@/game/GameContext';
 import {
   type CardDef, type CardRarity, type CardElement, type Lane, type BattleUnit, type BattleState, type BoardState,
   BALANCE_CONSTANT,
