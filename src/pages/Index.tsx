@@ -1225,7 +1225,6 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
                   <Send size={16} />
                 </button>
               )}
-              </button>
             </div>
             <div className="flex items-center justify-between mt-1.5 ml-5">
               <div className="relative">
