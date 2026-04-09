@@ -83,6 +83,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/keys"
+                element={
+                  <ProtectedRoute>
+                    <ApiKeyManager />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
