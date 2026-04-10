@@ -98,6 +98,21 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/gunit"
+                element={
+                  <ProtectedRoute>
+                    <GunitLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<GunitDashboard />} />
+                <Route path="bots" element={<GunitBotFactory />} />
+                <Route path="chat" element={<GunitChat />} />
+                <Route path="agents" element={<GunitAgents />} />
+                <Route path="users" element={<GunitUsers />} />
+                <Route path="keys" element={<GunitApiKeys />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
