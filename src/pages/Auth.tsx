@@ -5,6 +5,9 @@ import { toast } from "sonner";
 
 type AuthView = "login" | "signup" | "forgot" | "reset";
 
+const DEMO_EMAIL = "demo@jackie.dev";
+const DEMO_PASSWORD = "demo123456";
+
 const Auth = () => {
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
@@ -209,6 +212,46 @@ const Auth = () => {
                 {loading ? "..." : view === "login" ? "Sign In" : "Sign Up"}
               </button>
             </form>
+
+            {view === "login" && (
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  setEmail(DEMO_EMAIL);
+                  setPassword(DEMO_PASSWORD);
+                  try {
+                    // Try sign in first, if fails create the demo account then sign in
+                    const { error } = await supabase.auth.signInWithPassword({
+                      email: DEMO_EMAIL,
+                      password: DEMO_PASSWORD,
+                    });
+                    if (error) {
+                      // Create demo account
+                      const { error: signUpErr } = await supabase.auth.signUp({
+                        email: DEMO_EMAIL,
+                        password: DEMO_PASSWORD,
+                      });
+                      if (signUpErr) throw signUpErr;
+                      // Try login again
+                      const { error: retryErr } = await supabase.auth.signInWithPassword({
+                        email: DEMO_EMAIL,
+                        password: DEMO_PASSWORD,
+                      });
+                      if (retryErr) throw retryErr;
+                    }
+                    toast.success("Welcome, demo user!");
+                  } catch (err: any) {
+                    toast.error(err.message || "Demo login failed.");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="w-full py-3 rounded-sm font-mono text-sm uppercase tracking-wider border-2 border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 btn-mechanical flex items-center justify-center gap-2"
+              >
+                ⚡ Demo — Press &amp; Enter
+              </button>
+            )}
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
