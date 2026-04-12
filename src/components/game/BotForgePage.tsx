@@ -5,6 +5,24 @@ import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
+const API_KEYS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-keys`;
+
+async function apiKeysCall(action: string, method: 'GET' | 'POST' | 'DELETE', body?: unknown) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${session.access_token}`,
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  };
+  const opts: RequestInit = { method, headers };
+  if (body) {
+    headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(`${API_KEYS_URL}/${action}`, opts);
+  return res.json();
+}
+
 interface BotConfig {
   name: string;
   purpose: 'scout' | 'trader' | 'diplomat' | 'warlord' | 'spy';
@@ -98,12 +116,8 @@ export default function BotForgePage() {
   const loadKeys = async () => {
     if (!user) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const res = await supabase.functions.invoke('api-keys/list', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (res.data?.keys) setKeys(res.data.keys);
+      const res = await apiKeysCall('list', 'GET');
+      if (res?.keys) setKeys(res.keys);
     } catch { /* ignore */ }
   };
 
@@ -169,15 +183,8 @@ export default function BotForgePage() {
   const linkKeyToBot = async (botId: string, keyId: string) => {
     if (!user) return;
     try {
-      // Remove existing link for this bot
       await supabase.from('bot_api_keys').delete().eq('bot_id', botId).eq('user_id', user.id);
-      // Insert new link
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      await supabase.functions.invoke('api-keys/link-bot', {
-        body: { bot_id: botId, api_key_id: keyId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await apiKeysCall('link-bot', 'POST', { bot_id: botId, api_key_id: keyId });
       toast.success('🔗 Key linked to bot');
       setLinkingBotId(null);
       loadBots();
@@ -202,14 +209,9 @@ export default function BotForgePage() {
     if (!user || !newKeyName.trim()) { toast.error('Name your key'); return; }
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-      const res = await supabase.functions.invoke('api-keys/create', {
-        body: { name: newKeyName.trim(), scopes: ['bot:create', 'bot:read', 'game:read'] },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (res.data?.raw_key) {
-        setRevealedKey(res.data.raw_key);
+      const res = await apiKeysCall('create', 'POST', { name: newKeyName.trim(), scopes: ['bot:create', 'bot:read', 'game:read'] });
+      if (res?.raw_key) {
+        setRevealedKey(res.raw_key);
         setNewKeyName('');
         toast.success('🔑 API Key forged! Copy it now — it won\'t be shown again.');
         loadKeys();
@@ -223,12 +225,7 @@ export default function BotForgePage() {
 
   const revokeKey = async (keyId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      await supabase.functions.invoke('api-keys/revoke', {
-        body: { key_id: keyId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await apiKeysCall('revoke', 'POST', { key_id: keyId });
       toast.success('Key revoked');
       loadKeys();
     } catch { toast.error('Failed to revoke'); }
