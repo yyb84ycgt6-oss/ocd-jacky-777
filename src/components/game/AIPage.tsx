@@ -25,7 +25,7 @@ function buildGameSummary(state: ReturnType<typeof useGame>['state']) {
   for (const r of state.research) power += r.level * 80;
 
   return `## Player Realm State
-- **Ruler**: ${state.name}
+- **Ruler**: ${state.realmName}
 - **Keep Level**: ${keepLvl}
 - **Estimated Power**: ${power.toLocaleString()}
 - **Resources**: Food ${state.resources.food.toLocaleString()}, Wood ${state.resources.wood.toLocaleString()}, Stone ${state.resources.stone.toLocaleString()}, Iron ${state.resources.iron.toLocaleString()}, Gold ${state.resources.gold.toLocaleString()}
@@ -35,7 +35,7 @@ function buildGameSummary(state: ReturnType<typeof useGame>['state']) {
 - **Research**: ${research || 'None'}
 - **Active Marches**: ${activeMarchCount}, **Uncollected**: ${completedMarchCount}
 - **Rare Materials**: Essence ${mats.essence}, Arcane Dust ${mats.arcane_dust}, Mithril ${mats.mithril}, Dragon Scale ${mats.dragon_scale}
-- **Heroes**: ${state.heroes.filter(h => h.unlocked).map(h => `${h.id} Lv${h.level}`).join(', ') || 'None unlocked'}`;
+- **Unlocked Heroes**: ${state.unlockedHeroes?.join(', ') || 'None'}`;
 }
 
 const ORACLE_SYSTEM_CONTEXT = `You are the Oracle — a mystical strategic advisor inside a mobile strategy game (Lords Mobile / Rise of Kingdoms style).
