@@ -681,6 +681,59 @@ export const JADE_STORE_PACKS: JadePack[] = [
     {bestValue:true,targetSegment:'collector',emotionalHook:'Start your title collection',scores:{visual_desirability:6,perceived_value:8,real_margin:5,beginner_friendliness:4,collector_appeal:8,whale_appeal:2,urgency_strength:2,prestige_strength:5,retention_contribution:6,overall_attractiveness:6}}),
 ];
 
+// ── Auto-inject Gold & Resources into every pack based on value tier ──
+(function injectBonusResources() {
+  const prices = JADE_STORE_PACKS.map(p => p.priceDiamonds);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const range = maxPrice - minPrice || 1;
+
+  // Gold tiers: 500 → 50,000
+  const goldTiers = [
+    { pct: 0.00, gold: 500 },
+    { pct: 0.10, gold: 1000 },
+    { pct: 0.25, gold: 1500 },
+    { pct: 0.50, gold: 5000 },
+    { pct: 0.70, gold: 10000 },
+    { pct: 0.85, gold: 15000 },
+    { pct: 0.95, gold: 30000 },
+    { pct: 1.00, gold: 50000 },
+  ];
+
+  function getGold(pct: number): number {
+    for (let i = goldTiers.length - 1; i >= 0; i--) {
+      if (pct >= goldTiers[i].pct) {
+        if (i === goldTiers.length - 1) return goldTiers[i].gold;
+        const lo = goldTiers[i], hi = goldTiers[i + 1];
+        const t = (pct - lo.pct) / (hi.pct - lo.pct);
+        return Math.round(lo.gold + t * (hi.gold - lo.gold));
+      }
+    }
+    return goldTiers[0].gold;
+  }
+
+  // Resources: 10,000,000 → 900,000,000 per type (linear)
+  function getResource(pct: number): number {
+    return Math.round(10_000_000 + pct * (900_000_000 - 10_000_000));
+  }
+
+  for (const pack of JADE_STORE_PACKS) {
+    const pct = (pack.priceDiamonds - minPrice) / range;
+    const gold = getGold(pct);
+    const res = getResource(pct);
+
+    const bonuses = [
+      { name: 'Gold', icon: '💰', rarity: 'rough' as const, quantity: gold, guaranteed: true },
+      { name: 'Food', icon: '🌾', rarity: 'rough' as const, quantity: res, guaranteed: true },
+      { name: 'Wood', icon: '🪵', rarity: 'rough' as const, quantity: res, guaranteed: true },
+      { name: 'Stone', icon: '⛏️', rarity: 'rough' as const, quantity: res, guaranteed: true },
+      { name: 'Iron', icon: '⚙️', rarity: 'rough' as const, quantity: res, guaranteed: true },
+    ];
+
+    pack.bonusRewards = [...(pack.bonusRewards || []), ...bonuses];
+  }
+})();
+
 // ── Helper functions for filtering/sorting ──
 export function getPacksByCategory(category: JadeStoreCategory): JadePack[] {
   return JADE_STORE_PACKS.filter(p => p.category === category);
