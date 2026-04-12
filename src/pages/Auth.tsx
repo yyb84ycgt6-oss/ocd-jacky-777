@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ const DEMO_EMAIL = "demo@jackie.dev";
 const DEMO_PASSWORD = "J4ck!3_D3m0#2026xQ";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -308,6 +310,17 @@ const Auth = () => {
               className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               {view === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}
+            </button>
+
+            {/* Sandbox mode */}
+            <button
+              onClick={() => {
+                sessionStorage.setItem("sandbox", "true");
+                navigate("/sandbox");
+              }}
+              className="w-full py-3 rounded-sm font-mono text-sm uppercase tracking-wider border border-dashed border-primary/30 text-primary/70 hover:text-primary hover:border-primary/60 hover:bg-primary/5 transition-all disabled:opacity-50 btn-mechanical flex items-center justify-center gap-2"
+            >
+              🧪 Sandbox Mode
             </button>
 
           </>
