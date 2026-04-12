@@ -1,3 +1,4 @@
+import React from 'react';
 import { GameProvider, useGame } from '@/game/GameContext';
 import { I18nProvider } from '@/game/i18n';
 import { AudioProvider } from '@/game/AudioSystem';
