@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Zap, Gamepad2, Palette, Bot, Key, Shield, Package, Globe } from "lucide-react";
+import { Zap, Gamepad2, Bot, Key, Shield, Package, Globe } from "lucide-react";
 
 const sections = [
   { path: "/", label: "Jackie Chat", icon: Zap, desc: "AI assistant" },
