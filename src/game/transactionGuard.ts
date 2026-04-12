@@ -77,48 +77,45 @@ export function releaseTransactionLock(txId: string): void {
   pendingTransactions.delete(txId);
 }
 
-// ── Server-Side Transaction Logging ──
+// ── Server-Side Transaction Logging (via edge function) ──
 export async function logTransaction(record: TransactionRecord): Promise<boolean> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return false;
 
-    const { error } = await supabase.from('game_transactions' as any).insert({
-      user_id: session.user.id,
-      ...record,
+    const { data, error } = await supabase.functions.invoke('game-transaction', {
+      body: { action: 'log', record },
     });
 
     if (error) {
       console.error('[TransactionGuard] Log failed:', error.message);
       return false;
     }
-    return true;
+    return data?.logged === true;
   } catch (e) {
     console.error('[TransactionGuard] Log error:', e);
     return false;
   }
 }
 
-// ── Server-Side Deduplication ──
+// ── Server-Side Deduplication (via edge function) ──
 export async function checkServerDedup(txId: string, source: string): Promise<boolean> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return true; // Allow if not authenticated (offline mode)
 
-    const { error } = await supabase.from('game_purchase_locks' as any).insert({
-      user_id: session.user.id,
-      transaction_id: txId,
-      source,
+    const { data, error } = await supabase.functions.invoke('game-transaction', {
+      body: { action: 'dedup', transaction_id: txId, source },
     });
 
-    // If insert fails due to unique constraint, it's a duplicate
     if (error) {
-      if (error.code === '23505') {
-        console.warn('[TransactionGuard] Duplicate transaction blocked:', txId);
-        return false;
-      }
-      // Other errors — allow but log
       console.error('[TransactionGuard] Dedup check failed:', error.message);
+      return true; // Fail open for network issues
+    }
+
+    if (data?.duplicate) {
+      console.warn('[TransactionGuard] Duplicate transaction blocked:', txId);
+      return false;
     }
     return true;
   } catch {
