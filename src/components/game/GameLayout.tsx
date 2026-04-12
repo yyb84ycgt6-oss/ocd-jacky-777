@@ -30,10 +30,11 @@ import PremiumStorePage from '@/components/game/PremiumStorePage';
 import JadeStorePage from '@/components/game/JadeStorePage';
 import JadeAdminPage from '@/components/game/JadeAdminPage';
 import DiamondExchangePage from '@/components/game/DiamondExchangePage';
+import BotForgePage from '@/components/game/BotForgePage';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-type Tab = 'dashboard' | 'city' | 'research' | 'army' | 'expeditions' | 'heroes' | 'shards' | 'map' | 'crafting' | 'diplomacy' | 'jukebox' | 'oracle' | 'eventlog' | 'quests' | 'trading' | 'gacha' | 'battlepass' | 'leaderboard' | 'shop' | 'bag' | 'marketplace' | 'guildbank' | 'premiumstore' | 'jadestore' | 'jadeadmin' | 'diamonds';
+type Tab = 'dashboard' | 'city' | 'research' | 'army' | 'expeditions' | 'heroes' | 'shards' | 'map' | 'crafting' | 'diplomacy' | 'jukebox' | 'oracle' | 'eventlog' | 'quests' | 'trading' | 'gacha' | 'battlepass' | 'leaderboard' | 'shop' | 'bag' | 'marketplace' | 'guildbank' | 'premiumstore' | 'jadestore' | 'jadeadmin' | 'diamonds' | 'botforge';
 
 const tabVariants = {
   initial: { opacity: 0, y: 12 },
@@ -75,6 +76,7 @@ export default function GameLayout() {
     { id: 'diamonds', label: 'Diamond Exchange', icon: '💠' },
     { id: 'jadestore', label: 'Jade Vault', icon: '🏛️' },
     { id: 'jadeadmin', label: 'Admin Curation', icon: '⚙️' },
+    { id: 'botforge', label: 'Bot Forge', icon: '🤖' },
   ];
 
   const handleTabChange = (tab: Tab) => {
@@ -111,6 +113,7 @@ export default function GameLayout() {
       case 'diamonds': return <DiamondExchangePage />;
       case 'jadestore': return <JadeStorePage />;
       case 'jadeadmin': return <JadeAdminPage />;
+      case 'botforge': return <BotForgePage />;
     }
   };
 
