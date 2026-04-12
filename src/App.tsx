@@ -133,6 +133,7 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </SandboxCatcher>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
