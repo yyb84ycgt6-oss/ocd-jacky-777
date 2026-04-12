@@ -225,12 +225,7 @@ export default function BotForgePage() {
 
   const revokeKey = async (keyId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      await supabase.functions.invoke('api-keys/revoke', {
-        body: { key_id: keyId },
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+      await apiKeysCall('revoke', 'POST', { key_id: keyId });
       toast.success('Key revoked');
       loadKeys();
     } catch { toast.error('Failed to revoke'); }
