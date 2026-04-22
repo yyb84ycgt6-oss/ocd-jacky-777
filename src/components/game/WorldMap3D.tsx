@@ -164,7 +164,6 @@ function loadChunksAround(chunks: Map<string, ChunkData>, camX: number, camZ: nu
   // Unload far
   for (const [key, chunk] of next) {
     if (Math.abs(chunk.cx - ccx) > radius + 2 || Math.abs(chunk.cy - ccy) > radius + 2) {
-      next.dispose?.(); // no-op safety
       next.delete(key);
       changed = true;
     }
