@@ -374,7 +374,7 @@ function ChunkMesh({ chunk, segmentMul }: { chunk: ChunkData; segmentMul: number
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.computeVertexNormals();
     return geo;
-  }, [chunk]);
+  }, [chunk, segmentMul]);
 
   const material = useMemo(() => new THREE.ShaderMaterial({
     uniforms: {
