@@ -283,7 +283,9 @@ function ChunkMesh({ chunk }: { chunk: ChunkData }) {
     fragmentShader: terrainFrag,
   }), []);
 
-  return <mesh geometry={geometry} material={material} />;
+  useEffect(() => () => { geometry.dispose(); material.dispose(); }, [geometry, material]);
+
+  return <mesh geometry={geometry} material={material} frustumCulled={true} />;
 }
 
 // ═══════════════════════════════════════════
