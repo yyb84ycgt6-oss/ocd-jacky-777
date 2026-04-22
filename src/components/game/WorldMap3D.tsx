@@ -679,18 +679,39 @@ function SimpleParticles({ camX, camZ, count = 250 }: { camX: number; camZ: numb
 //  CAMERA CONTROLLER
 // ═══════════════════════════════════════════
 
-function CameraController({ controlsRef, onCameraMove }: { controlsRef: React.RefObject<any>; onCameraMove: (x: number, z: number) => void }) {
+function CameraController({
+  controlsRef,
+  onCameraMove,
+}: {
+  controlsRef: React.RefObject<any>;
+  onCameraMove: (x: number, z: number, vx: number, vz: number) => void;
+}) {
   const lastSync = useRef(0);
-  const lastChunkCheck = useRef(0);
+  const lastPos = useRef<{ x: number; z: number; t: number } | null>(null);
+  const velocity = useRef({ vx: 0, vz: 0 });
 
-  useFrame(({ clock, camera }) => {
+  useFrame(({ clock }) => {
     const controls = controlsRef.current;
     if (!controls) return;
     const t = clock.elapsedTime;
+    const x = controls.target.x;
+    const z = controls.target.z;
 
-    if (t - lastSync.current > 0.2) {
+    // Update velocity estimate every frame (EMA-smoothed) so prefetch reacts quickly
+    if (lastPos.current) {
+      const dt = Math.max(1 / 120, t - lastPos.current.t);
+      const instVx = (x - lastPos.current.x) / dt;
+      const instVz = (z - lastPos.current.z) / dt;
+      // Exponential moving average: smooth out jitter from damped controls
+      const a = 0.25;
+      velocity.current.vx = velocity.current.vx * (1 - a) + instVx * a;
+      velocity.current.vz = velocity.current.vz * (1 - a) + instVz * a;
+    }
+    lastPos.current = { x, z, t };
+
+    if (t - lastSync.current > 0.15) {
       lastSync.current = t;
-      onCameraMove(controls.target.x, controls.target.z);
+      onCameraMove(x, z, velocity.current.vx, velocity.current.vz);
     }
   });
 
@@ -714,13 +735,17 @@ function WorldScene({ onSelect }: { onSelect: (id: string | null) => void }) {
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const lastChunkCenter = useRef({ cx: 0, cy: 0 });
-  const handleCameraMove = useCallback((x: number, z: number) => {
+  const handleCameraMove = useCallback((x: number, z: number, vx: number, vz: number) => {
     setCamPos(prev => (Math.abs(prev.x - x) < 0.5 && Math.abs(prev.z - z) < 0.5 ? prev : { x, z }));
     const ccx = Math.floor(x / CHUNK_SIZE), ccy = Math.floor(z / CHUNK_SIZE);
-    if (lastChunkCenter.current.cx === ccx && lastChunkCenter.current.cy === ccy) return;
+    const crossedBoundary =
+      lastChunkCenter.current.cx !== ccx || lastChunkCenter.current.cy !== ccy;
+    const speed = Math.hypot(vx, vz);
+    // Run loader if we crossed a chunk or we're moving fast enough that prefetch matters
+    if (!crossedBoundary && speed < 1.5) return;
     lastChunkCenter.current = { cx: ccx, cy: ccy };
     setChunks(prev => {
-      const { map, changed } = loadChunksAround(prev, x, z, 3);
+      const { map, changed } = loadChunksAround(prev, x, z, 3, { vx, vz });
       return changed ? map : prev;
     });
   }, []);
