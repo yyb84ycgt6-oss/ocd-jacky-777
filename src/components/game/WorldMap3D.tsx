@@ -148,25 +148,28 @@ function generateChunk(cx: number, cy: number): ChunkData {
 
 function chunkKey(cx: number, cy: number) { return `${cx},${cy}`; }
 
-function loadChunksAround(chunks: Map<string, ChunkData>, camX: number, camZ: number, radius: number) {
+function loadChunksAround(chunks: Map<string, ChunkData>, camX: number, camZ: number, radius: number): { map: Map<string, ChunkData>; changed: boolean } {
   const ccx = Math.floor(camX / CHUNK_SIZE), ccy = Math.floor(camZ / CHUNK_SIZE);
   let changed = false;
+  const next = chunks;
   for (let dy = -radius; dy <= radius; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
       const key = chunkKey(ccx + dx, ccy + dy);
-      if (!chunks.has(key)) {
-        chunks.set(key, generateChunk(ccx + dx, ccy + dy));
+      if (!next.has(key)) {
+        next.set(key, generateChunk(ccx + dx, ccy + dy));
         changed = true;
       }
     }
   }
   // Unload far
-  for (const [key, chunk] of chunks) {
+  for (const [key, chunk] of next) {
     if (Math.abs(chunk.cx - ccx) > radius + 2 || Math.abs(chunk.cy - ccy) > radius + 2) {
-      chunks.delete(key); changed = true;
+      next.dispose?.(); // no-op safety
+      next.delete(key);
+      changed = true;
     }
   }
-  return changed ? new Map(chunks) : chunks;
+  return { map: changed ? new Map(next) : next, changed };
 }
 
 // ═══════════════════════════════════════════
