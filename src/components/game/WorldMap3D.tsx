@@ -475,7 +475,7 @@ const waterFrag = `
   }
 `;
 
-function WaterPlane({ camX, camZ }: { camX: number; camZ: number }) {
+function WaterPlane({ camX, camZ, segments }: { camX: number; camZ: number; segments: number }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
