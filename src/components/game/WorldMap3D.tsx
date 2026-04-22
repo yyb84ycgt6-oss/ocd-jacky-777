@@ -282,23 +282,33 @@ function loadChunksAround(
     }
   }
 
-  // Generate at most a few prefetch chunks per call to keep frame budget
+  // Generate at most a few prefetch chunks per call to keep frame budget.
+  // Skip any cell already generated recently — this prevents jittery movement
+  // near the speed threshold from re-queueing the same chunks repeatedly.
   const MAX_PREFETCH_PER_CALL = 2;
   let prefetched = 0;
   for (const [cx, cy] of prefetchCells) {
     if (prefetched >= MAX_PREFETCH_PER_CALL) break;
     const key = chunkKey(cx, cy);
-    if (!next.has(key)) {
-      next.set(key, generateChunk(cx, cy));
-      changed = true;
-      prefetched++;
+    if (next.has(key)) {
+      // Already loaded — refresh its recency so the keep-radius protects it
+      touchRecentPrefetch(key, now);
+      continue;
     }
+    if (isRecentlyPrefetched(key, now)) continue;
+    next.set(key, generateChunk(cx, cy));
+    touchRecentPrefetch(key, now);
+    changed = true;
+    prefetched++;
   }
 
-  // Unload far chunks (use a wider keep radius so prefetch survives brief stops)
+  // Unload far chunks (use a wider keep radius so prefetch survives brief stops).
+  // Additionally, never unload a chunk that was prefetched within the TTL window —
+  // this absorbs short oscillations across the unload boundary.
   const keep = radius + 3;
   for (const [key, chunk] of next) {
     if (Math.abs(chunk.cx - ccx) > keep || Math.abs(chunk.cy - ccy) > keep) {
+      if (isRecentlyPrefetched(key, now)) continue;
       next.delete(key);
       changed = true;
     }
