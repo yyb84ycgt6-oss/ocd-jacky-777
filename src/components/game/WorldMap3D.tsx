@@ -770,7 +770,7 @@ function CameraController({
 //  MAIN WORLD SCENE
 // ═══════════════════════════════════════════
 
-function WorldScene({ onSelect }: { onSelect: (id: string | null) => void }) {
+function WorldScene({ onSelect, quality }: { onSelect: (id: string | null) => void; quality: QualitySettings }) {
   const { state } = useGame();
   const controlsRef = useRef<any>(null);
   const isMobile = useIsMobile();
@@ -778,7 +778,7 @@ function WorldScene({ onSelect }: { onSelect: (id: string | null) => void }) {
   const [camPos, setCamPos] = useState({ x: 0, z: 0 });
   const [chunks, setChunks] = useState<Map<string, ChunkData>>(() => {
     const init = new Map<string, ChunkData>();
-    return loadChunksAround(init, 0, 0, 3).map;
+    return loadChunksAround(init, 0, 0, quality.chunkRadius).map;
   });
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
@@ -789,14 +789,13 @@ function WorldScene({ onSelect }: { onSelect: (id: string | null) => void }) {
     const crossedBoundary =
       lastChunkCenter.current.cx !== ccx || lastChunkCenter.current.cy !== ccy;
     const speed = Math.hypot(vx, vz);
-    // Run loader if we crossed a chunk or we're moving fast enough that prefetch matters
     if (!crossedBoundary && speed < 1.5) return;
     lastChunkCenter.current = { cx: ccx, cy: ccy };
     setChunks(prev => {
-      const { map, changed } = loadChunksAround(prev, x, z, 3, { vx, vz });
+      const { map, changed } = loadChunksAround(prev, x, z, quality.chunkRadius, { vx, vz });
       return changed ? map : prev;
     });
-  }, []);
+  }, [quality.chunkRadius]);
 
   // Generate markers from game data
   const markers: MapMarker[] = useMemo(() => {
