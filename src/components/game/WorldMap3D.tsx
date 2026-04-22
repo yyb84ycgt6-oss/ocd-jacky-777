@@ -401,7 +401,7 @@ function WaterPlane({ camX, camZ }: { camX: number; camZ: number }) {
       position={[Math.round(camX / CHUNK_SIZE) * CHUNK_SIZE, SEA_LEVEL_Y, Math.round(camZ / CHUNK_SIZE) * CHUNK_SIZE]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <planeGeometry args={[planeSize, planeSize, 128, 128]} />
+      <planeGeometry args={[planeSize, planeSize, 80, 80]} />
       <shaderMaterial ref={matRef} uniforms={uniforms} vertexShader={waterVert} fragmentShader={waterFrag} transparent depthWrite={false} />
     </mesh>
   );
