@@ -286,10 +286,10 @@ function renderForestWind(ctx: CanvasRenderingContext2D, particles: Particle[], 
 // ── Neutron Star ── epic pulsar: rotating beams, accretion disk, magnetosphere, distorted starfield
 interface NSStar { x: number; y: number; r: number; tw: number; hue: number; }
 let nsStars: NSStar[] | null = null;
-function ensureNSStars(w: number, h: number) {
-  if (nsStars && nsStars.length) return nsStars;
+let nsStarCount = 0;
+function ensureNSStars(w: number, h: number, count: number) {
+  if (nsStars && nsStars.length === count) return nsStars;
   const arr: NSStar[] = [];
-  const count = 220;
   for (let i = 0; i < count; i++) {
     arr.push({
       x: Math.random() * w,
