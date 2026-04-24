@@ -487,6 +487,9 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
       case 'lightning':
         renderLightning(ctx!, w, h, t);
         break;
+      case 'neutron_star':
+        renderNeutronStar(ctx!, w, h, t);
+        break;
       case 'forest_wind':
         renderForestWind(ctx!, particles, w, h, t);
         break;
@@ -510,6 +513,7 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
   const onResize = () => {
     w = canvas.width = canvas.offsetWidth;
     h = canvas.height = canvas.offsetHeight;
+    nsStars = null; // regenerate distorted starfield for new dims
   };
   window.addEventListener('resize', onResize);
 
