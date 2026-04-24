@@ -304,7 +304,12 @@ function ensureNSStars(w: number, h: number, count: number) {
   return arr;
 }
 
+// Glow intensity (0–2) — multiplies pulse, jet, disk, magnetosphere alpha for the neutron star.
+let nsGlow = 1;
+export function setNeutronStarGlow(g: number) { nsGlow = Math.max(0, Math.min(2, g)); }
+
 function renderNeutronStar(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, quality: number = 1) {
+  const glow = nsGlow;
   // Deep space wash with subtle blue bias
   ctx.fillStyle = 'rgba(2, 4, 14, 0.18)';
   ctx.fillRect(0, 0, w, h);
