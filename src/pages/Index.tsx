@@ -65,6 +65,7 @@ import {
 } from "@/lib/jackie-files";
 import AnimatedCanvas from "@/components/backgrounds/AnimatedCanvas";
 import NeutronBackgroundSettings, { loadNeutronSettings, type NeutronBackgroundSettings as NSSettings } from "@/components/backgrounds/NeutronBackgroundSettings";
+import LanguageSwitcher from "@/components/game/LanguageSwitcher";
 
 interface DisplayMessage {
   id: string;
