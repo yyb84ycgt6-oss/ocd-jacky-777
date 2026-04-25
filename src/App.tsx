@@ -142,7 +142,8 @@ const App = () => (
             </Routes>
             </SandboxCatcher>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </I18nProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
