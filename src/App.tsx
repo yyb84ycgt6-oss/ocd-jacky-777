@@ -17,6 +17,7 @@ import TelegramShell from "./pages/TelegramShell";
 import NotFound from "./pages/NotFound";
 import Vault from "./pages/Vault";
 import BotFoundry from "./pages/BotFoundry";
+import BotSwarm from "./pages/BotSwarm";
 import ApiKeyManager from "./pages/ApiKeyManager";
 import GunitLayout from "./pages/gunit/GunitLayout";
 import GunitDashboard from "./pages/gunit/GunitDashboard";
@@ -104,6 +105,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <BotFoundry />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/swarm"
+                element={
+                  <ProtectedRoute>
+                    <BotSwarm />
                   </ProtectedRoute>
                 }
               />
