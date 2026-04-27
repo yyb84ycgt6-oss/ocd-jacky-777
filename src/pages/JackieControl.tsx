@@ -76,6 +76,12 @@ export default function JackieControl() {
       setActions(listActions());
       setAudit(loadAudit());
     });
+    // Hydrate from DB (no-op if signed out)
+    void hydrateControlPrefs();
+    void hydrateAudit();
+    void fetchSwarmsRemote(50).then((rows) => {
+      if (rows.length > 0) setSwarms(rows);
+    });
     return () => { unsub(); };
   }, []);
 
