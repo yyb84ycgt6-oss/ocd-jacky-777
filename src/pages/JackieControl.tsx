@@ -34,8 +34,40 @@ import {
 import { toast } from "sonner";
 import {
   ArrowLeft, Cpu, Shield, Activity, Terminal, Send, Trash2, Zap,
-  Network, Loader2, Play, RefreshCw, ChevronRight,
+  Network, Loader2, Play, RefreshCw, ChevronRight, Download,
 } from "lucide-react";
+
+function downloadBlob(filename: string, mime: string, content: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function auditToCsv(rows: AuditEntry[]): string {
+  const header = ["timestamp", "actor", "command", "action_id", "result", "message", "args"];
+  const escape = (v: unknown) => {
+    const s = v === undefined || v === null ? "" : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = rows.map((e) =>
+    [
+      new Date(e.ts).toISOString(),
+      e.actor,
+      e.command,
+      e.actionId ?? "",
+      e.result,
+      e.message,
+      e.args ? JSON.stringify(e.args) : "",
+    ].map(escape).join(",")
+  );
+  return [header.join(","), ...lines].join("\n");
+}
 
 type SwarmTask = {
   id: string;
