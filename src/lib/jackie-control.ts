@@ -105,11 +105,22 @@ function saveAudit(entries: AuditEntry[]) {
 export function appendAudit(entry: AuditEntry) {
   const next = [entry, ...loadAudit()].slice(0, MAX_AUDIT);
   saveAudit(next);
+  void pushAuditRemote(entry);
   notify();
 }
 export function clearAudit() {
   saveAudit([]);
+  void clearAuditRemote();
   notify();
+}
+
+// Hydrate audit log from DB (replaces local cache when remote present)
+export async function hydrateAudit(): Promise<void> {
+  const remote = await fetchAuditRemote(MAX_AUDIT);
+  if (remote.length > 0) {
+    saveAudit(remote);
+    notify();
+  }
 }
 
 export function subscribe(cb: () => void): () => void {
