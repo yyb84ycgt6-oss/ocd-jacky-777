@@ -85,6 +85,17 @@ export default function JackieControl() {
   const [override, setOverrideState] = useState<string | null>(getModelOverride());
   const [actions, setActions] = useState<ControlAction[]>(listActions());
   const [audit, setAudit] = useState<AuditEntry[]>(loadAudit());
+  const [auditQuery, setAuditQuery] = useState("");
+
+  const filteredAudit = useMemo(() => {
+    const q = auditQuery.trim().toLowerCase();
+    if (!q) return audit;
+    return audit.filter((e) =>
+      (e.actionId ?? "").toLowerCase().includes(q) ||
+      (e.message ?? "").toLowerCase().includes(q) ||
+      (e.command ?? "").toLowerCase().includes(q)
+    );
+  }, [audit, auditQuery]);
 
   const [command, setCommand] = useState("");
   const [busy, setBusy] = useState(false);
