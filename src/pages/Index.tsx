@@ -805,7 +805,7 @@ Provide your assessment in this structure:
 Keep it concise but thorough. No hype, no false alarm — just truth.`;
 
           const res = await fetch(
-            `https://rkwhhbxgjdpehfuxsult.supabase.co/functions/v1/jackie-chat`,
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jackie-chat`,
             {
               method: 'POST',
               headers: {
