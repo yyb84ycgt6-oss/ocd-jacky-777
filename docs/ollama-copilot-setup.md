@@ -76,3 +76,51 @@ If your Ollama server is not local:
 - Put Ollama behind VPN or a reverse proxy with auth and TLS.
 - Restrict access by IP/network.
 - Monitor logs and rotate access credentials regularly.
+
+## 6) Similar non-Microsoft model families (GitHub)
+
+If you want alternatives similar to your listed Llama/CodeLlama stack, these are strong free/open options with active GitHub projects:
+
+### Chat / coding assistants
+
+- Qwen2.5-Coder (Alibaba Qwen)  
+  GitHub: https://github.com/QwenLM/Qwen2.5-Coder
+- DeepSeek-Coder V2 (DeepSeek)  
+  GitHub: https://github.com/deepseek-ai/DeepSeek-Coder-V2
+- StarCoder2 (BigCode)  
+  GitHub: https://github.com/bigcode-project/starcoder2
+- Mistral / Mixtral family (Mistral AI)  
+  GitHub: https://github.com/mistralai
+- Gemma / CodeGemma (Google)  
+  GitHub: https://github.com/google-deepmind/gemma
+
+### Vision-capable multimodal options
+
+- Qwen2.5-VL (Alibaba Qwen)  
+  GitHub: https://github.com/QwenLM/Qwen2.5-VL
+- Janus-Pro (DeepSeek)  
+  GitHub: https://github.com/deepseek-ai/Janus
+- Moondream2 (small VLM)  
+  GitHub: https://github.com/vikhyat/moondream
+
+### Guard / safety style alternatives
+
+- ShieldGemma (Google)  
+  GitHub: https://github.com/google-deepmind/shieldgemma
+- Open-source LLM Guard tooling  
+  GitHub: https://github.com/protectai/llm-guard
+
+### Vision backbones (similar category to SAM / DINO / DeiT)
+
+- Segment Anything (SAM)  
+  GitHub: https://github.com/facebookresearch/segment-anything
+- DINOv2  
+  GitHub: https://github.com/facebookresearch/dinov2
+- DeiT  
+  GitHub: https://github.com/facebookresearch/deit
+
+### Quick start picks for local coding with Ollama
+
+- `qwen2.5-coder:14b` (quality/speed balance)
+- `deepseek-coder-v2` class models (strong coding reasoning)
+- `starcoder2` class models (good OSS code completion baseline)
