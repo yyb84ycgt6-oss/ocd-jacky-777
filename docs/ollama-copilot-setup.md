@@ -45,14 +45,14 @@ Create your Continue config file (or update your existing one):
 {
   "models": [
     {
-      "title": "Local Ollama Coder",
+      "title": "Local Ollama Coder (Chat)",
       "provider": "ollama",
       "model": "qwen2.5-coder:14b",
       "apiBase": "http://localhost:11434"
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Local Ollama Coder",
+    "title": "Local Ollama Coder (Autocomplete)",
     "provider": "ollama",
     "model": "qwen2.5-coder:14b",
     "apiBase": "http://localhost:11434"
@@ -90,7 +90,7 @@ If you host Ollama outside your laptop (cloud VM, home server, or behind your ow
 - Put Nginx/Caddy in front with HTTPS + auth, then route to Ollama privately.
 - Keep `apiBase` set to your secured endpoint in your client config.
 
-## 7) Similar non-Microsoft model families (GitHub)
+## 7) Similar non-Microsoft model families
 
 If you want alternatives similar to your listed Llama/CodeLlama stack, these are strong free/open options with active GitHub projects:
 
