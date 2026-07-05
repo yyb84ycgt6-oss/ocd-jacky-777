@@ -60,7 +60,7 @@ Create your Continue config file (or update your existing one):
 }
 ```
 
-If Ollama is remote, replace `localhost` with your host/IP and secure it first (VPN or authenticated reverse proxy with TLS).
+If Ollama is remote, replace `localhost` with your host/IP and secure it first (set up VPN access, or an authenticated reverse proxy with TLS, before connecting your coding client).
 
 ## 4) Suggested hybrid workflow
 
@@ -113,7 +113,7 @@ If you want alternatives similar to your listed Llama/CodeLlama stack, these are
 - [ShieldGemma](https://github.com/google-deepmind/shieldgemma) (Google)
 - [LLM Guard tooling](https://github.com/protectai/llm-guard) (Protect AI)
 
-### Vision backbones (similar category to SAM / DINO / DeiT)
+### Optional vision backbones (if you also need vision tasks)
 
 - [Segment Anything (SAM)](https://github.com/facebookresearch/segment-anything)
 - [DINOv2](https://github.com/facebookresearch/dinov2)
