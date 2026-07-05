@@ -68,9 +68,9 @@ serve(async (req) => {
       });
     }
 
-    const style = typeof agentStyle === "string" && agentStyle.trim()
-      ? agentStyle.trim().slice(0, 120)
-      : "tactical";
+    const allowedStyles = new Set(["tactical", "creative", "conservative", "analytic"]);
+    const requestedStyle = typeof agentStyle === "string" ? agentStyle.trim().toLowerCase() : "";
+    const style = allowedStyles.has(requestedStyle) ? requestedStyle : "tactical";
     const customSystem = typeof systemPrompt === "string" && systemPrompt.trim()
       ? systemPrompt.trim().slice(0, 2000)
       : "";
@@ -81,9 +81,10 @@ serve(async (req) => {
 
     const agentFilter = agentId && typeof agentId === "string" ? agentId : null;
 
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
     // Update agent status
     if (agentFilter) {
-      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       await admin
         .from("gunit_agents")
         .update({ status: "active", last_run_at: new Date().toISOString() })
@@ -125,7 +126,6 @@ serve(async (req) => {
       const score = scoreMatch ? Math.min(10, Math.max(0, parseInt(scoreMatch[1]))) : 5;
 
       // Save improvement
-      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       await admin.from("gunit_improvements").insert({
         user_id: user.id, goal, execution, analysis, improvement, score,
       });
@@ -135,7 +135,6 @@ serve(async (req) => {
       });
     } finally {
       if (agentFilter) {
-        const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
         await admin
           .from("gunit_agents")
           .update({ status: "idle" })

@@ -36,7 +36,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Cpu, Shield, Activity, Terminal, Send, Trash2, Zap,
   Network, Loader2, Play, RefreshCw, ChevronRight, Download, Search, X,
-  CheckCircle2, XCircle, HelpCircle, ShieldCheck,
+  CheckCircle2, XCircle, HelpCircle, ShieldCheck, Bot, SlidersHorizontal,
 } from "lucide-react";
 
 function downloadBlob(filename: string, mime: string, content: string) {
@@ -71,6 +71,19 @@ function auditToCsv(rows: AuditEntry[]): string {
   return [header.join(","), ...lines].join("\n");
 }
 
+function createId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+    return `id_${hex}`;
+  }
+  return `id_${Date.now()}_${Math.random().toString(36).slice(2, 18)}`;
+}
+
 type SwarmTask = {
   id: string;
   goal: string;
@@ -80,7 +93,36 @@ type SwarmTask = {
   startedAt: number;
 };
 
+type CustomControl = {
+  id: string;
+  name: string;
+  mode: "orchestrator" | "swarm" | "command";
+  payload: string;
+  kind?: TaskKind;
+  models?: string[];
+  createdAt: number;
+};
+
 const TASK_KINDS: TaskKind[] = ["auto", "reasoning", "coding", "fast", "long-context"];
+const CUSTOM_CONTROLS_KEY = "jackie.control.custom-controls.v1";
+const MAX_CUSTOM_CONTROLS = 100;
+
+function loadCustomControls(): CustomControl[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_CONTROLS_KEY);
+    return raw ? (JSON.parse(raw) as CustomControl[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomControls(controls: CustomControl[]) {
+  try {
+    localStorage.setItem(CUSTOM_CONTROLS_KEY, JSON.stringify(controls.slice(0, MAX_CUSTOM_CONTROLS)));
+  } catch {
+    /* ignore */
+  }
+}
 
 export default function JackieControl() {
   const [role, setRoleState] = useState<Role>(getRole());
@@ -118,6 +160,16 @@ export default function JackieControl() {
   const [verifyInput, setVerifyInput] = useState("");
   const [verifyResults, setVerifyResults] = useState<LangCheckResult[]>([]);
   const [verifying, setVerifying] = useState(false);
+  const [customControls, setCustomControls] = useState<CustomControl[]>(loadCustomControls);
+  const [newControlName, setNewControlName] = useState("");
+  const [newControlMode, setNewControlMode] = useState<CustomControl["mode"]>("orchestrator");
+  const [newControlPayload, setNewControlPayload] = useState("");
+  const [newControlKind, setNewControlKind] = useState<TaskKind>("auto");
+  const [newControlModels, setNewControlModels] = useState<string[]>(["google/gemini-3-flash-preview"]);
+  const isCustomControlInvalid =
+    !newControlName.trim() ||
+    !newControlPayload.trim() ||
+    (newControlMode === "swarm" && newControlModels.length === 0);
 
   const runVerify = useCallback(async (langs: string[]) => {
     if (langs.length === 0) return;
@@ -161,16 +213,20 @@ export default function JackieControl() {
     return () => { unsub(); };
   }, []);
 
+  useEffect(() => {
+    saveCustomControls(customControls);
+  }, [customControls]);
+
   const activeModelLabel = useMemo(() => {
     const id = override || pickModel(kind === "auto" ? "fast" : kind).id;
     return ORCHESTRATOR_MODELS.find((m) => m.id === id)?.label || id;
   }, [override, kind]);
 
-  const onRunCommand = useCallback(async () => {
-    if (!command.trim()) return;
+  const executeCommand = useCallback(async (line: string) => {
+    if (!line.trim()) return;
     setBusy(true);
     try {
-      const res = await runCommand(command);
+      const res = await runCommand(line);
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
 
@@ -186,11 +242,17 @@ export default function JackieControl() {
       } else if (res.ok && data?.kind === "verify" && Array.isArray(data.payload)) {
         await runVerify(data.payload);
       }
-      setCommand("");
     } finally {
       setBusy(false);
     }
-  }, [command]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [runOrchestrator, runSwarm, runVerify]);
+
+  const onRunCommand = useCallback(async () => {
+    const line = command.trim();
+    if (!line) return;
+    await executeCommand(line);
+    setCommand("");
+  }, [command, executeCommand]);
 
   const runOrchestrator = useCallback(
     async (text: string, k: TaskKind = kind) => {
@@ -226,7 +288,7 @@ export default function JackieControl() {
         toast.error("Provide a goal and at least one model");
         return;
       }
-      const id = crypto.randomUUID();
+      const id = createId();
       const task: SwarmTask = {
         id, goal, models: [...swarmModels], status: "running", results: [], startedAt: Date.now(),
       };
@@ -252,6 +314,54 @@ export default function JackieControl() {
     },
     [swarmGoal, swarmModels]
   );
+
+  const runCustomControl = useCallback(
+    async (control: CustomControl) => {
+      if (control.mode === "orchestrator") {
+        await runOrchestrator(control.payload, control.kind || "auto");
+        return;
+      }
+      if (control.mode === "swarm") {
+        const nextModels = control.models?.length ? control.models : swarmModels;
+        setSwarmModels(nextModels);
+        await runSwarm(control.payload);
+        return;
+      }
+      if (control.mode === "command") {
+        setCommand(control.payload);
+        await executeCommand(control.payload);
+      }
+    },
+    [executeCommand, runOrchestrator, runSwarm, swarmModels]
+  );
+
+  const createCustomControl = useCallback(() => {
+    if (!newControlName.trim() || !newControlPayload.trim()) {
+      toast.error("Control name and payload are required");
+      return;
+    }
+    const control: CustomControl = {
+      id: createId(),
+      name: newControlName.trim(),
+      mode: newControlMode,
+      payload: newControlPayload.trim(),
+      kind: newControlMode === "orchestrator" ? newControlKind : undefined,
+      models: newControlMode === "swarm" ? newControlModels : undefined,
+      createdAt: Date.now(),
+    };
+    setCustomControls((prev) => [control, ...prev]);
+    setNewControlName("");
+    setNewControlPayload("");
+    appendAudit({
+      ts: Date.now(),
+      actor: getRole(),
+      command: "/control create",
+      result: "ok",
+      message: `Created custom control: ${control.name}`,
+      args: { mode: control.mode },
+    });
+    toast.success("Custom control created");
+  }, [newControlKind, newControlMode, newControlModels, newControlName, newControlPayload]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -297,6 +407,153 @@ export default function JackieControl() {
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                 Run
               </button>
+            </div>
+          </div>
+
+          {/* Bot + Agent quick controls */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Bot className="h-4 w-4 text-primary" />
+              <h2 className="font-mono text-sm font-semibold">Bot + Agent Controls</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setPrompt("Design a production-ready bot architecture with modules, security controls, and deployment checklist.");
+                  void runOrchestrator("Design a production-ready bot architecture with modules, security controls, and deployment checklist.", "coding");
+                }}
+                className="text-left rounded border border-border bg-background/40 p-2 hover:bg-muted/40"
+              >
+                <div className="font-mono text-xs text-foreground">Bot Architect</div>
+                <div className="font-mono text-[10px] text-muted-foreground">Run coding orchestrator blueprint</div>
+              </button>
+              <button
+                onClick={() => {
+                  setSwarmGoal("Analyze current AI/bot system and return optimization actions by priority.");
+                  void runSwarm("Analyze current AI/bot system and return optimization actions by priority.");
+                }}
+                className="text-left rounded border border-border bg-background/40 p-2 hover:bg-muted/40"
+              >
+                <div className="font-mono text-xs text-foreground">Agent Swarm Audit</div>
+                <div className="font-mono text-[10px] text-muted-foreground">Dispatch all selected models</div>
+              </button>
+              <button
+                onClick={() => {
+                  setVerifyInput("typescript, python, postgres, deno");
+                  void runVerify(["typescript", "python", "postgres", "deno"]);
+                }}
+                className="text-left rounded border border-border bg-background/40 p-2 hover:bg-muted/40"
+              >
+                <div className="font-mono text-xs text-foreground">Stack Self-Check</div>
+                <div className="font-mono text-[10px] text-muted-foreground">Verify key language outputs</div>
+              </button>
+              <button
+                onClick={() => {
+                  setCommand("/control list");
+                  void executeCommand("/control list");
+                }}
+                className="text-left rounded border border-border bg-background/40 p-2 hover:bg-muted/40"
+              >
+                <div className="font-mono text-xs text-foreground">Registry Refresh</div>
+                <div className="font-mono text-[10px] text-muted-foreground">List and validate actions</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Control builder */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+              <h2 className="font-mono text-sm font-semibold">Control Builder</h2>
+              <span className="ml-auto text-[10px] font-mono text-muted-foreground">{customControls.length} saved</span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2 mb-2">
+              <input
+                value={newControlName}
+                onChange={(e) => setNewControlName(e.target.value)}
+                placeholder="Control name"
+                className="bg-background border border-input rounded px-3 py-2 text-sm font-mono"
+              />
+              <select
+                value={newControlMode}
+                onChange={(e) => setNewControlMode(e.target.value as CustomControl["mode"])}
+                className="bg-background border border-input rounded px-3 py-2 text-sm font-mono"
+              >
+                <option value="orchestrator">orchestrator</option>
+                <option value="swarm">swarm</option>
+                <option value="command">command</option>
+              </select>
+            </div>
+            {newControlMode === "orchestrator" && (
+              <select
+                value={newControlKind}
+                onChange={(e) => setNewControlKind(e.target.value as TaskKind)}
+                className="w-full bg-background border border-input rounded px-3 py-2 text-sm font-mono mb-2"
+              >
+                {TASK_KINDS.map((k) => (
+                  <option key={k} value={k}>kind: {k}</option>
+                ))}
+              </select>
+            )}
+            {newControlMode === "swarm" && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                {ORCHESTRATOR_MODELS.map((m) => {
+                  const on = newControlModels.includes(m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setNewControlModels((prev) => on ? prev.filter((x) => x !== m.id) : [...prev, m.id])}
+                      className={`text-left text-xs font-mono px-2 py-1.5 rounded border ${
+                        on ? "border-primary bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground"
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <textarea
+              value={newControlPayload}
+              onChange={(e) => setNewControlPayload(e.target.value)}
+              placeholder={newControlMode === "command" ? "/swarm optimize checkout flow" : "Prompt / goal payload"}
+              rows={3}
+              className="w-full bg-background border border-input rounded px-3 py-2 text-sm font-mono mb-2"
+            />
+            <button
+              onClick={createCustomControl}
+              disabled={isCustomControlInvalid}
+              className="px-3 py-2 rounded bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              <Play className="h-3.5 w-3.5" /> Create control
+            </button>
+            <div className="mt-3 space-y-2 max-h-64 overflow-auto">
+              {customControls.length === 0 && (
+                <p className="text-xs font-mono text-muted-foreground">No custom controls yet.</p>
+              )}
+              {customControls.map((c) => (
+                <div key={c.id} className="rounded border border-border/60 bg-background/40 p-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-foreground truncate">{c.name}</span>
+                    <span className="ml-auto text-[10px] font-mono text-muted-foreground">{c.mode}</span>
+                  </div>
+                  <p className="text-[11px] font-mono text-muted-foreground truncate">{c.payload}</p>
+                  <div className="mt-1.5 flex gap-2">
+                    <button
+                      onClick={() => void runCustomControl(c)}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded border border-border hover:bg-muted"
+                    >
+                      run
+                    </button>
+                    <button
+                      onClick={() => setCustomControls((prev) => prev.filter((x) => x.id !== c.id))}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded border border-border hover:text-destructive"
+                    >
+                      delete
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
