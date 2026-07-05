@@ -24,7 +24,7 @@ curl http://localhost:11434/api/tags
 
 ## 2) Connect a coding client
 
-GitHub Copilot itself does not currently let you swap in Ollama as its backend model.  
+GitHub Copilot itself does not currently let you swap in Ollama as its backend model.
 Use Ollama through a compatible coding client in parallel with Copilot.
 
 Supported options include:
@@ -36,7 +36,10 @@ Supported options include:
 
 ## 3) Example: Continue configuration
 
-Create `/home/<your-user>/.continue/config.json` (or update your existing config):
+Create your Continue config file (or update your existing one):
+
+- Linux/macOS: `~/.continue/config.json`
+- Windows: `%USERPROFILE%\.continue\config.json`
 
 ```json
 {
@@ -77,46 +80,56 @@ If your Ollama server is not local:
 - Restrict access by IP/network.
 - Monitor logs and rotate access credentials regularly.
 
-## 6) Similar non-Microsoft model families (GitHub)
+## 6) Use with your own cloud or hardware router
+
+If you host Ollama outside your laptop (cloud VM, home server, or behind your own router):
+
+- Run Ollama only on a private interface when possible.
+- Prefer VPN access (WireGuard/Tailscale) instead of open internet exposure.
+- If using router port-forwarding, forward only from trusted source IPs.
+- Put Nginx/Caddy in front with HTTPS + auth, then route to Ollama privately.
+- Keep `apiBase` set to your secured endpoint in your client config.
+
+## 7) Similar non-Microsoft model families (GitHub)
 
 If you want alternatives similar to your listed Llama/CodeLlama stack, these are strong free/open options with active GitHub projects:
 
 ### Chat / coding assistants
 
-- Qwen2.5-Coder (Alibaba Qwen)  
+- Qwen2.5-Coder (Alibaba Qwen)
   GitHub: https://github.com/QwenLM/Qwen2.5-Coder
-- DeepSeek-Coder V2 (DeepSeek)  
+- DeepSeek-Coder V2 (DeepSeek)
   GitHub: https://github.com/deepseek-ai/DeepSeek-Coder-V2
-- StarCoder2 (BigCode)  
+- StarCoder2 (BigCode)
   GitHub: https://github.com/bigcode-project/starcoder2
-- Mistral / Mixtral family (Mistral AI)  
+- Mistral / Mixtral family (Mistral AI)
   GitHub: https://github.com/mistralai
-- Gemma / CodeGemma (Google)  
+- Gemma / CodeGemma (Google)
   GitHub: https://github.com/google-deepmind/gemma
 
 ### Vision-capable multimodal options
 
-- Qwen2.5-VL (Alibaba Qwen)  
+- Qwen2.5-VL (Alibaba Qwen)
   GitHub: https://github.com/QwenLM/Qwen2.5-VL
-- Janus-Pro (DeepSeek)  
+- Janus-Pro (DeepSeek)
   GitHub: https://github.com/deepseek-ai/Janus
-- Moondream2 (small VLM)  
+- Moondream2 (small VLM)
   GitHub: https://github.com/vikhyat/moondream
 
 ### Guard / safety style alternatives
 
-- ShieldGemma (Google)  
+- ShieldGemma (Google)
   GitHub: https://github.com/google-deepmind/shieldgemma
-- Open-source LLM Guard tooling  
+- Open-source LLM Guard tooling
   GitHub: https://github.com/protectai/llm-guard
 
 ### Vision backbones (similar category to SAM / DINO / DeiT)
 
-- Segment Anything (SAM)  
+- Segment Anything (SAM)
   GitHub: https://github.com/facebookresearch/segment-anything
-- DINOv2  
+- DINOv2
   GitHub: https://github.com/facebookresearch/dinov2
-- DeiT  
+- DeiT
   GitHub: https://github.com/facebookresearch/deit
 
 ### Quick start picks for local coding with Ollama
