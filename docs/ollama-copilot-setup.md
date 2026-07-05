@@ -96,41 +96,28 @@ If you want alternatives similar to your listed Llama/CodeLlama stack, these are
 
 ### Chat / coding assistants
 
-- Qwen2.5-Coder (Alibaba Qwen)
-  GitHub: https://github.com/QwenLM/Qwen2.5-Coder
-- DeepSeek-Coder V2 (DeepSeek)
-  GitHub: https://github.com/deepseek-ai/DeepSeek-Coder-V2
-- StarCoder2 (BigCode)
-  GitHub: https://github.com/bigcode-project/starcoder2
-- Mistral / Mixtral family (Mistral AI)
-  GitHub: https://github.com/mistralai
-- Gemma / CodeGemma (Google)
-  GitHub: https://github.com/google-deepmind/gemma
+- [Qwen2.5-Coder](https://github.com/QwenLM/Qwen2.5-Coder) (Alibaba Qwen)
+- [DeepSeek-Coder V2](https://github.com/deepseek-ai/DeepSeek-Coder-V2) (DeepSeek)
+- [StarCoder2](https://github.com/bigcode-project/starcoder2) (BigCode)
+- [Mistral / Mixtral family](https://github.com/mistralai) (Mistral AI)
+- [Gemma / CodeGemma](https://github.com/google-deepmind/gemma) (Google)
 
 ### Vision-capable multimodal options
 
-- Qwen2.5-VL (Alibaba Qwen)
-  GitHub: https://github.com/QwenLM/Qwen2.5-VL
-- Janus-Pro (DeepSeek)
-  GitHub: https://github.com/deepseek-ai/Janus
-- Moondream2 (small VLM)
-  GitHub: https://github.com/vikhyat/moondream
+- [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) (Alibaba Qwen)
+- [Janus-Pro](https://github.com/deepseek-ai/Janus) (DeepSeek)
+- [Moondream2](https://github.com/vikhyat/moondream) (small VLM)
 
 ### Guard / safety style alternatives
 
-- ShieldGemma (Google)
-  GitHub: https://github.com/google-deepmind/shieldgemma
-- Open-source LLM Guard tooling
-  GitHub: https://github.com/protectai/llm-guard
+- [ShieldGemma](https://github.com/google-deepmind/shieldgemma) (Google)
+- [LLM Guard tooling](https://github.com/protectai/llm-guard) (Protect AI)
 
 ### Vision backbones (similar category to SAM / DINO / DeiT)
 
-- Segment Anything (SAM)
-  GitHub: https://github.com/facebookresearch/segment-anything
-- DINOv2
-  GitHub: https://github.com/facebookresearch/dinov2
-- DeiT
-  GitHub: https://github.com/facebookresearch/deit
+- [Segment Anything (SAM)](https://github.com/facebookresearch/segment-anything)
+- [DINOv2](https://github.com/facebookresearch/dinov2)
+- [DeiT](https://github.com/facebookresearch/deit)
 
 ### Quick start picks for local coding with Ollama
 
