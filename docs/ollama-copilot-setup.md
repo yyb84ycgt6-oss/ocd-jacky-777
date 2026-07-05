@@ -64,7 +64,7 @@ If Ollama is remote, replace `localhost` with your host/IP and secure it first (
 
 ## 4) Suggested hybrid workflow
 
-- Keep GitHub Copilot enabled for inline autocomplete.
+- If you have GitHub Copilot, you can keep it enabled for inline autocomplete.
 - Use Ollama client chats/agents for larger work (refactors, debugging, architecture tasks).
 - Use repository scripts for verification:
   - `npm run lint`
@@ -134,6 +134,6 @@ If you want alternatives similar to your listed Llama/CodeLlama stack, these are
 
 ### Quick start picks for local coding with Ollama
 
-- `qwen2.5-coder:14b` (quality/speed balance)
-- `deepseek-coder-v2` class models (strong coding reasoning)
-- `starcoder2` class models (good open-source code completion baseline)
+- Qwen2.5-Coder family (quality/speed balance)
+- DeepSeek-Coder V2 family (strong coding reasoning)
+- StarCoder2 family (good open-source code completion baseline)
