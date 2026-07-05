@@ -136,4 +136,4 @@ If you want alternatives similar to your listed Llama/CodeLlama stack, these are
 
 - `qwen2.5-coder:14b` (quality/speed balance)
 - `deepseek-coder-v2` class models (strong coding reasoning)
-- `starcoder2` class models (good OSS code completion baseline)
+- `starcoder2` class models (good open-source code completion baseline)
