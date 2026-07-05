@@ -66,7 +66,7 @@ If Ollama is remote, replace `localhost` with your host/IP and secure it first (
 
 - If you have GitHub Copilot, you can keep it enabled for inline autocomplete.
 - Use Ollama client chats/agents for larger work (refactors, debugging, architecture tasks).
-- Use repository scripts for verification:
+- This repository includes these verification scripts:
   - `npm run lint`
   - `npm run test`
   - `npm run build`
