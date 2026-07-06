@@ -132,19 +132,74 @@ function renderParticles(ctx: CanvasRenderingContext2D, particles: Particle[], w
   }
 }
 
-function renderGalaxy(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
-  ctx.fillStyle = 'rgba(0, 0, 5, 0.03)';
+function hash01(n: number) {
+  const s = Math.sin(n * 127.1) * 43758.5453123;
+  return s - Math.floor(s);
+}
+
+function renderGalaxy(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, quality: number = 1) {
+  ctx.fillStyle = 'rgba(0, 0, 8, 0.06)';
   ctx.fillRect(0, 0, w, h);
   const cx = w / 2, cy = h / 2;
-  for (let i = 0; i < 200; i++) {
-    const angle = (i / 200) * Math.PI * 6 + t * 0.0003;
-    const dist = (i / 200) * Math.min(w, h) * 0.45 + Math.sin(t * 0.001 + i) * 5;
-    const x = cx + Math.cos(angle) * dist;
-    const y = cy + Math.sin(angle) * dist * 0.6;
-    const brightness = Math.sin(t * 0.002 + i * 0.1) * 0.3 + 0.5;
-    ctx.fillStyle = `hsla(${220 + i * 0.5}, 70%, 70%, ${brightness})`;
+  const minDim = Math.min(w, h);
+  const time = t * 0.001;
+
+  // Nebula wash
+  const nebula = ctx.createRadialGradient(cx, cy, minDim * 0.06, cx, cy, minDim * 0.65);
+  nebula.addColorStop(0, 'hsla(250, 95%, 68%, 0.2)');
+  nebula.addColorStop(0.45, 'hsla(220, 90%, 58%, 0.12)');
+  nebula.addColorStop(1, 'hsla(210, 90%, 45%, 0)');
+  ctx.fillStyle = nebula;
+  ctx.fillRect(0, 0, w, h);
+
+  const armCount = 4;
+  const starsPerArm = Math.max(80, Math.round(140 * quality));
+  const maxRadius = minDim * 0.47;
+
+  // Spiral arms
+  for (let arm = 0; arm < armCount; arm++) {
+    const armPhase = (arm / armCount) * Math.PI * 2;
+    for (let i = 0; i < starsPerArm; i++) {
+      const n = i / starsPerArm;
+      const radius = Math.pow(n, 0.78) * maxRadius;
+      const twist = radius / maxRadius * Math.PI * 4.6;
+      const turbulence = (hash01(i * 19.13 + arm * 3.7) - 0.5) * 0.45;
+      const angle = armPhase + twist + time * 0.08 + turbulence;
+      const spread = 0.25 + n * 0.95;
+      const x = cx + Math.cos(angle) * radius + (hash01(i * 3.17 + arm) - 0.5) * spread * 16;
+      const y = cy + Math.sin(angle) * radius * 0.62 + (hash01(i * 2.31 + arm * 5.9) - 0.5) * spread * 12;
+      const twinkle = 0.45 + 0.55 * Math.sin(time * 2.2 + i * 0.11 + arm);
+      const hue = 210 + n * 70 + Math.sin(time + i * 0.03) * 8;
+      const starR = 0.5 + (1 - n) * 1.6;
+      ctx.fillStyle = `hsla(${hue}, 95%, ${68 + (1 - n) * 20}%, ${0.12 + twinkle * 0.62})`;
+      ctx.beginPath();
+      ctx.arc(x, y, starR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Dense stellar core
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.2);
+  core.addColorStop(0, 'hsla(45, 100%, 92%, 0.95)');
+  core.addColorStop(0.38, 'hsla(40, 100%, 75%, 0.48)');
+  core.addColorStop(1, 'hsla(30, 100%, 55%, 0)');
+  ctx.fillStyle = core;
+  ctx.beginPath();
+  ctx.arc(cx, cy, minDim * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Background stars
+  const bgStars = Math.max(70, Math.round(130 * quality));
+  for (let i = 0; i < bgStars; i++) {
+    const base = i * 17.17;
+    const x = hash01(base + 11.3) * w;
+    const y = hash01(base + 43.9) * h;
+    const tw = 0.25 + Math.abs(Math.sin(time * 1.4 + i * 0.19)) * 0.6;
+    const size = 0.35 + hash01(base + 7.1) * 1.2;
+    const hue = 205 + hash01(base + 3.7) * 45;
+    ctx.fillStyle = `hsla(${hue}, 80%, 78%, ${0.15 + tw * 0.45})`;
     ctx.beginPath();
-    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -164,35 +219,128 @@ function renderSacredGeometry(ctx: CanvasRenderingContext2D, w: number, h: numbe
       const a = (i / sides) * Math.PI * 2 + rot + ring * 0.1;
       const px = cx + Math.cos(a) * r;
       const py = cy + Math.sin(a) * r;
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
     }
     ctx.stroke();
   }
 }
 
-function renderBlackHole(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+function renderBlackHole(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, quality: number = 1) {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
   ctx.fillRect(0, 0, w, h);
   const cx = w / 2, cy = h / 2;
-  for (let i = 0; i < 150; i++) {
-    const angle = (i / 150) * Math.PI * 8 + t * 0.001;
-    const dist = 20 + (i / 150) * Math.min(w, h) * 0.4;
-    const pull = Math.max(0, 1 - dist / (Math.min(w, h) * 0.5));
-    const x = cx + Math.cos(angle) * dist * (1 - pull * 0.3);
-    const y = cy + Math.sin(angle) * dist * 0.5 * (1 - pull * 0.3);
-    ctx.fillStyle = `hsla(${30 + pull * 200}, 80%, ${40 + pull * 30}%, ${0.3 + pull * 0.5})`;
+  const minDim = Math.min(w, h);
+  const time = t * 0.001;
+
+  // Lensed starfield near gravity well
+  const starCount = Math.max(70, Math.round(130 * quality));
+  for (let i = 0; i < starCount; i++) {
+    const base = i * 29.17;
+    const sx = hash01(base + 0.7) * w;
+    const sy = hash01(base + 4.9) * h;
+    const dx = sx - cx;
+    const dy = sy - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy) + 0.001;
+    const pull = Math.min(1, (minDim * 0.22) / dist);
+    const bend = pull * pull * 18;
+    const x = sx - (dx / dist) * bend;
+    const y = sy - (dy / dist) * bend;
+    const twinkle = 0.3 + 0.7 * Math.abs(Math.sin(time * 2 + i * 0.13));
+    const hue = 200 + hash01(base + 8.3) * 70;
+    ctx.fillStyle = `hsla(${hue}, 85%, 78%, ${0.12 + twinkle * 0.45})`;
     ctx.beginPath();
-    ctx.arc(x, y, 1 + pull * 2, 0, Math.PI * 2);
+    ctx.arc(x, y, 0.5 + hash01(base + 3.3) * 1.1, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Event horizon
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
-  grad.addColorStop(0, 'rgba(0,0,0,1)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = grad;
+
+  // Rotating accretion disk
+  const diskBands = Math.max(3, Math.round(6 * quality));
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(time * 0.4);
+  for (let i = 0; i < diskBands; i++) {
+    const ring = minDim * (0.12 + i * 0.045);
+    const g = ctx.createRadialGradient(0, 0, ring * 0.55, 0, 0, ring);
+    g.addColorStop(0, `hsla(${25 + i * 10}, 100%, 65%, 0)`);
+    g.addColorStop(0.6, `hsla(${35 + i * 14}, 100%, 60%, ${0.18 - i * 0.02})`);
+    g.addColorStop(0.85, `hsla(${270 + i * 8}, 90%, 60%, ${0.2 - i * 0.025})`);
+    g.addColorStop(1, 'hsla(290, 90%, 55%, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, ring, ring * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Photon ring
+  const ringR = minDim * 0.13;
+  ctx.strokeStyle = `hsla(40, 100%, 75%, ${0.35 + Math.sin(time * 3.5) * 0.15})`;
+  ctx.lineWidth = 1.4;
   ctx.beginPath();
-  ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy, ringR, ringR * 0.42, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Event horizon
+  const horizon = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.09);
+  horizon.addColorStop(0, 'rgba(0, 0, 0, 1)');
+  horizon.addColorStop(0.65, 'rgba(0, 0, 0, 0.95)');
+  horizon.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = horizon;
+  ctx.beginPath();
+  ctx.arc(cx, cy, minDim * 0.09, 0, Math.PI * 2);
   ctx.fill();
+}
+
+function renderStarscape(ctx: CanvasRenderingContext2D, w: number, h: number, t: number, quality: number = 1) {
+  ctx.fillStyle = 'rgba(2, 5, 15, 0.06)';
+  ctx.fillRect(0, 0, w, h);
+  const time = t * 0.001;
+
+  const nebulaA = ctx.createRadialGradient(w * 0.2, h * 0.25, 0, w * 0.2, h * 0.25, Math.min(w, h) * 0.45);
+  nebulaA.addColorStop(0, 'hsla(250, 95%, 60%, 0.12)');
+  nebulaA.addColorStop(1, 'hsla(250, 95%, 60%, 0)');
+  ctx.fillStyle = nebulaA;
+  ctx.fillRect(0, 0, w, h);
+
+  const nebulaB = ctx.createRadialGradient(w * 0.78, h * 0.72, 0, w * 0.78, h * 0.72, Math.min(w, h) * 0.4);
+  nebulaB.addColorStop(0, 'hsla(190, 95%, 62%, 0.1)');
+  nebulaB.addColorStop(1, 'hsla(190, 95%, 62%, 0)');
+  ctx.fillStyle = nebulaB;
+  ctx.fillRect(0, 0, w, h);
+
+  const nearCount = Math.max(90, Math.round(150 * quality));
+  const farCount = Math.max(70, Math.round(120 * quality));
+
+  // Far layer
+  for (let i = 0; i < farCount; i++) {
+    const base = i * 13.91;
+    const x = (hash01(base + 1.2) * w + time * (6 + hash01(base + 2.8) * 4)) % w;
+    const y = hash01(base + 4.1) * h;
+    const tw = 0.3 + Math.abs(Math.sin(time * 1.3 + i * 0.23)) * 0.55;
+    const hue = 205 + hash01(base + 7.6) * 60;
+    ctx.fillStyle = `hsla(${hue}, 65%, 74%, ${0.12 + tw * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 0.4 + hash01(base + 5.3) * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Near layer + slight streaking
+  for (let i = 0; i < nearCount; i++) {
+    const base = i * 23.73;
+    const speed = 12 + hash01(base + 9.3) * 26;
+    const x = (hash01(base + 2.1) * w + time * speed) % w;
+    const y = hash01(base + 6.9) * h;
+    const pulse = 0.35 + 0.65 * Math.abs(Math.sin(time * 2.1 + i * 0.19));
+    const len = 0.6 + hash01(base + 3.5) * 2.6;
+    const hue = 200 + hash01(base + 8.7) * 70;
+    ctx.strokeStyle = `hsla(${hue}, 95%, 82%, ${0.2 + pulse * 0.5})`;
+    ctx.lineWidth = 0.6 + hash01(base + 7.2) * 0.9;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - len, y);
+    ctx.stroke();
+  }
 }
 
 function renderCrystalVault(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
@@ -481,7 +629,7 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
   let skipEvery = 0; // 0 = render every frame; N = skip N of every N+1 frames
 
   const particleCount = theme === 'snow' ? 100 : theme === 'forest_wind' ? 60 : 120;
-  const particles = ['fire_magma', 'aurora', 'ocean_glow', 'jade_zen', 'snow', 'ember_field', 'starscape', 'forest_wind']
+  const particles = ['fire_magma', 'aurora', 'ocean_glow', 'jade_zen', 'snow', 'ember_field', 'forest_wind']
     .includes(theme) ? createParticles(particleCount, w, h, theme) : [];
   const matrixCols = theme === 'matrix' || theme === 'code_stream' ? createMatrixCols(w, h) : [];
 
@@ -526,10 +674,10 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
         renderMatrix(ctx!, matrixCols, w, h);
         break;
       case 'galaxy':
-        renderGalaxy(ctx!, w, h, t);
+        renderGalaxy(ctx!, w, h, t, quality);
         break;
       case 'black_hole':
-        renderBlackHole(ctx!, w, h, t);
+        renderBlackHole(ctx!, w, h, t, quality);
         break;
       case 'sacred_geometry':
         renderSacredGeometry(ctx!, w, h, t);
@@ -546,6 +694,9 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
       case 'neutron_star':
         renderNeutronStar(ctx!, w, h, t, quality);
         break;
+      case 'starscape':
+        renderStarscape(ctx!, w, h, t, quality);
+        break;
       case 'forest_wind':
         renderForestWind(ctx!, particles, w, h, t);
         break;
@@ -555,7 +706,6 @@ export function createRenderer(theme: BackgroundTheme, canvas: HTMLCanvasElement
       case 'jade_zen':
       case 'snow':
       case 'ember_field':
-      case 'starscape':
         renderParticles(ctx!, particles, w, h, theme, t);
         break;
       default:
