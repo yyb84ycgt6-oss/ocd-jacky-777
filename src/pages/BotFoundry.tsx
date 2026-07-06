@@ -28,6 +28,14 @@ type AiAsset = {
   role: string;
 };
 
+type MobileKitItem = {
+  id: string;
+  name: string;
+  target: string;
+  mode: "on-device" | "hybrid" | "cloud-assisted";
+  purpose: string;
+};
+
 const EXAMPLES = [
   "Telegram bot that converts YouTube links to MP3 and tracks usage",
   "Discord moderation bot with auto-replies and scheduled announcements",
@@ -61,6 +69,17 @@ const AI_ASSETS_25: AiAsset[] = [
   { id: "pgvector", name: "pgvector", category: "VectorDB", deployment: "hybrid", priority: "balanced", download: "https://github.com/pgvector/pgvector", role: "Postgres-native embeddings" },
   { id: "gemini-flash", name: "Gemini 2.5 Flash (fallback)", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://ai.google.dev", role: "Cheapest fast cloud fallback" },
   { id: "openrouter-lowcost", name: "OpenRouter low-cost route", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://openrouter.ai", role: "Multi-provider budget fallback" },
+];
+
+const MOBILE_KIT: MobileKitItem[] = [
+  { id: "ios-pwa", name: "PWA install profile", target: "iPhone 11/12+ Safari", mode: "hybrid", purpose: "Home-screen install, offline shell, app-like UX" },
+  { id: "webgpu-fallback", name: "WebGPU/WebAssembly runtime fallback", target: "Modern mobile browsers", mode: "on-device", purpose: "Best-effort local inference with safe fallback" },
+  { id: "stt-mobile", name: "Streaming speech-to-text route", target: "iOS + Android", mode: "cloud-assisted", purpose: "Low-latency voice input for mobile agents" },
+  { id: "tts-mobile", name: "Adaptive TTS voice route", target: "iOS + Android", mode: "cloud-assisted", purpose: "Agent voice responses tuned for network quality" },
+  { id: "rag-mobile", name: "Mobile RAG profile", target: "iPhone/Android", mode: "hybrid", purpose: "Small local cache + cloud vector retrieval" },
+  { id: "battery-policy", name: "Battery/thermal policy", target: "iPhone 11/12+ and older devices", mode: "on-device", purpose: "Auto-downgrade models under heat/battery pressure" },
+  { id: "network-policy", name: "Network-aware model routing", target: "Any mobile", mode: "hybrid", purpose: "Prefer local on poor signal, cloud on strong network" },
+  { id: "secure-keyflow", name: "Secure API key/session flow", target: "All mobile devices", mode: "cloud-assisted", purpose: "No long-lived secrets in client storage" },
 ];
 
 export default function BotFoundry() {
@@ -193,6 +212,16 @@ export default function BotFoundry() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadMobileKitJSON = () => {
+    const blob = new Blob([JSON.stringify(MOBILE_KIT, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mobile-ai-kit.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -291,6 +320,32 @@ export default function BotFoundry() {
                   >
                     <Download size={11} /> Download source
                   </a>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile integration pack */}
+          <div className="rounded-xl border border-border bg-gradient-to-b from-primary/10 to-secondary/10 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <div className="font-mono text-[10px] tracking-widest text-primary">MOBILE INTEGRATION KIT</div>
+                <h3 className="font-display text-lg font-bold">iPhone 11/12+ & Cross-Mobile AI Ready</h3>
+                <p className="text-xs text-muted-foreground">Prepared routes and policies for iOS and other mobile devices.</p>
+              </div>
+              <button onClick={downloadMobileKitJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                <Download size={12} /> Download mobile kit
+              </button>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {MOBILE_KIT.map((item) => (
+                <div key={item.id} className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                  <div className="font-mono text-xs font-bold">{item.name}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Tag subtle>{item.target}</Tag>
+                    <Tag subtle>{item.mode}</Tag>
+                  </div>
+                  <p className="font-mono text-[11px] text-muted-foreground">{item.purpose}</p>
                 </div>
               ))}
             </div>
