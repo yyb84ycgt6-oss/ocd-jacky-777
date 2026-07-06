@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -18,11 +18,49 @@ type Plan = {
   rationale?: string;
 };
 
+type AiAsset = {
+  id: string;
+  name: string;
+  category: string;
+  deployment: "local" | "cloud" | "hybrid";
+  priority: "easy" | "balanced" | "power";
+  download: string;
+  role: string;
+};
+
 const EXAMPLES = [
   "Telegram bot that converts YouTube links to MP3 and tracks usage",
   "Discord moderation bot with auto-replies and scheduled announcements",
   "Web API that scrapes product prices from 3 stores and returns JSON",
   "Auth-guarded REST API that proxies OpenAI with per-key rate limits",
+];
+
+const AI_ASSETS_25: AiAsset[] = [
+  { id: "ollama-llama31-8b", name: "Ollama + Llama 3.1 8B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/llama3.1", role: "Fast local default assistant" },
+  { id: "ollama-qwen25-7b", name: "Ollama + Qwen2.5 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/qwen2.5", role: "Low-cost multilingual reasoning" },
+  { id: "ollama-mistral-7b", name: "Ollama + Mistral 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/mistral", role: "Reliable small instruct model" },
+  { id: "ollama-gemma2-9b", name: "Ollama + Gemma 2 9B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/gemma2", role: "Efficient local quality model" },
+  { id: "ollama-phi3-mini", name: "Ollama + Phi-3 Mini", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/phi3", role: "Ultra-light local fallback" },
+  { id: "ollama-qwen-coder", name: "Ollama + Qwen2.5-Coder 7B", category: "Code", deployment: "local", priority: "easy", download: "https://ollama.com/library/qwen2.5-coder", role: "Primary local coding assistant" },
+  { id: "ollama-deepseek-coder", name: "Ollama + DeepSeek Coder 6.7B", category: "Code", deployment: "local", priority: "easy", download: "https://ollama.com/library/deepseek-coder", role: "Code generation and refactor" },
+  { id: "ollama-llama32-3b", name: "Ollama + Llama 3.2 3B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/llama3.2", role: "Fast CPU-friendly chat" },
+  { id: "ollama-nomic-embed", name: "Ollama + Nomic Embed Text", category: "Embedding", deployment: "local", priority: "easy", download: "https://ollama.com/library/nomic-embed-text", role: "RAG embedding baseline" },
+  { id: "ollama-bge-m3", name: "Ollama + BGE-M3", category: "Embedding", deployment: "local", priority: "easy", download: "https://ollama.com/library/bge-m3", role: "Multilingual retrieval embedding" },
+  { id: "llamacpp-qwen14b", name: "llama.cpp + GGUF Qwen2.5 14B", category: "Runtime", deployment: "local", priority: "balanced", download: "https://github.com/ggerganov/llama.cpp", role: "Higher quality local inference" },
+  { id: "llamacpp-llama70b", name: "llama.cpp + GGUF Llama 3.1 70B", category: "Runtime", deployment: "hybrid", priority: "power", download: "https://github.com/ggerganov/llama.cpp", role: "Server-grade high quality model" },
+  { id: "vllm-qwen32b", name: "vLLM + Qwen2.5 32B", category: "Runtime", deployment: "cloud", priority: "power", download: "https://github.com/vllm-project/vllm", role: "High throughput API serving" },
+  { id: "vllm-mixtral", name: "vLLM + Mixtral 8x7B", category: "Runtime", deployment: "cloud", priority: "power", download: "https://github.com/vllm-project/vllm", role: "Balanced MoE cloud serving" },
+  { id: "faster-whisper", name: "Faster-Whisper", category: "Audio", deployment: "local", priority: "easy", download: "https://github.com/SYSTRAN/faster-whisper", role: "Speech-to-text pipeline" },
+  { id: "piper-tts", name: "Piper TTS", category: "Audio", deployment: "local", priority: "easy", download: "https://github.com/rhasspy/piper", role: "Fast local text-to-speech" },
+  { id: "open-webui", name: "Open WebUI", category: "UI", deployment: "local", priority: "easy", download: "https://github.com/open-webui/open-webui", role: "Unified local model interface" },
+  { id: "flowise", name: "Flowise", category: "Orchestration", deployment: "local", priority: "easy", download: "https://github.com/FlowiseAI/Flowise", role: "Visual agent-flow builder" },
+  { id: "langgraph", name: "LangGraph", category: "Orchestration", deployment: "hybrid", priority: "balanced", download: "https://github.com/langchain-ai/langgraph", role: "Stateful multi-agent graphs" },
+  { id: "crewai", name: "CrewAI", category: "Orchestration", deployment: "hybrid", priority: "balanced", download: "https://github.com/crewAIInc/crewAI", role: "Role-based agent teams" },
+  { id: "qdrant", name: "Qdrant", category: "VectorDB", deployment: "hybrid", priority: "balanced", download: "https://github.com/qdrant/qdrant", role: "Scalable vector search" },
+  { id: "chroma", name: "Chroma", category: "VectorDB", deployment: "local", priority: "easy", download: "https://github.com/chroma-core/chroma", role: "Simple local RAG store" },
+  { id: "pgvector", name: "pgvector", category: "VectorDB", deployment: "hybrid", priority: "balanced", download: "https://github.com/pgvector/pgvector", role: "Postgres-native embeddings" },
+  { id: "gemini-flash", name: "Gemini 2.5 Flash (fallback)", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://ai.google.dev", role: "Cheapest fast cloud fallback" },
+  { id: "openrouter-lowcost", name: "OpenRouter low-cost route", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://openrouter.ai", role: "Multi-provider budget fallback" },
 ];
 
 export default function BotFoundry() {
@@ -34,7 +72,25 @@ export default function BotFoundry() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [showCode, setShowCode] = useState(true);
+  const [assetQuery, setAssetQuery] = useState("");
+  const [deploymentFilter, setDeploymentFilter] = useState<"all" | AiAsset["deployment"]>("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
   const codeRef = useRef<HTMLDivElement>(null);
+
+  const categories = useMemo(
+    () => ["all", ...Array.from(new Set(AI_ASSETS_25.map(a => a.category)))],
+    []
+  );
+
+  const filteredAssets = useMemo(() => {
+    const q = assetQuery.trim().toLowerCase();
+    return AI_ASSETS_25.filter((asset) => {
+      if (deploymentFilter !== "all" && asset.deployment !== deploymentFilter) return false;
+      if (categoryFilter !== "all" && asset.category !== categoryFilter) return false;
+      if (!q) return true;
+      return `${asset.name} ${asset.category} ${asset.role}`.toLowerCase().includes(q);
+    });
+  }, [assetQuery, deploymentFilter, categoryFilter]);
 
   const generate = useCallback(async () => {
     if (!description.trim()) { toast.error("Describe your bot first"); return; }
@@ -112,6 +168,31 @@ export default function BotFoundry() {
     URL.revokeObjectURL(url);
   };
 
+  const downloadAssetInventoryJSON = () => {
+    const blob = new Blob([JSON.stringify(AI_ASSETS_25, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ai-assets-top-25.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAssetInventoryCSV = () => {
+    const headers = ["id", "name", "category", "deployment", "priority", "role", "download"];
+    const rows = AI_ASSETS_25.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ai-assets-top-25.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -142,6 +223,77 @@ export default function BotFoundry() {
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">
               One prompt. AI infers the platform, language, and modules — and ships production-ready code.
             </p>
+          </div>
+
+          {/* AI asset inventory */}
+          <div className="rounded-xl border border-border bg-gradient-to-b from-secondary/40 to-secondary/10 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <div className="font-mono text-[10px] tracking-widest text-primary">ASSET INVENTORY</div>
+                <h3 className="font-display text-lg font-bold">Top 25 Stack Assets</h3>
+                <p className="text-xs text-muted-foreground">Prioritized: easy local first, then low-cost cloud fallback.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={downloadAssetInventoryJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                  <Download size={12} /> JSON
+                </button>
+                <button onClick={downloadAssetInventoryCSV} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                  <Download size={12} /> CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-2">
+              <input
+                value={assetQuery}
+                onChange={(e) => setAssetQuery(e.target.value)}
+                placeholder="Search assets..."
+                className="px-3 py-2 rounded-md bg-background/60 border border-border font-mono text-xs focus:outline-none focus:border-primary/60"
+              />
+              <select
+                value={deploymentFilter}
+                onChange={(e) => setDeploymentFilter(e.target.value as "all" | AiAsset["deployment"])}
+                className="px-3 py-2 rounded-md bg-background/60 border border-border font-mono text-xs focus:outline-none focus:border-primary/60"
+              >
+                <option value="all">All deployments</option>
+                <option value="local">Local</option>
+                <option value="cloud">Cloud</option>
+                <option value="hybrid">Hybrid</option>
+              </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="px-3 py-2 rounded-md bg-background/60 border border-border font-mono text-xs focus:outline-none focus:border-primary/60"
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category === "all" ? "All categories" : category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+              {filteredAssets.map((asset) => (
+                <div key={asset.id} className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                  <div className="font-mono text-xs font-bold">{asset.name}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Tag subtle>{asset.category}</Tag>
+                    <Tag subtle>{asset.deployment}</Tag>
+                    <Tag subtle>{asset.priority}</Tag>
+                  </div>
+                  <p className="font-mono text-[11px] text-muted-foreground">{asset.role}</p>
+                  <a
+                    href={asset.download}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
+                  >
+                    <Download size={11} /> Download source
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Prompt card */}
