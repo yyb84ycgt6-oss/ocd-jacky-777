@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TelegramProvider } from '@/components/telegram/TelegramProvider';
 import RoomHub from '@/components/telegram/RoomHub';
 import SecurityCenter from '@/components/telegram/SecurityCenter';
@@ -11,6 +11,7 @@ type ActiveRoom = 'hub' | 'security' | 'music' | 'creatures' | 'cards' | 'jackie
 
 export default function TelegramShell() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeRoom, setActiveRoom] = useState<ActiveRoom>('hub');
 
   const handleNavigate = useCallback((roomId: string) => {
@@ -23,24 +24,38 @@ export default function TelegramShell() {
         navigate('/play');
         break;
       case 'security':
+        setSearchParams({ room: 'security' }, { replace: true });
         setActiveRoom('security');
         break;
       case 'music':
+        setSearchParams({ room: 'music' }, { replace: true });
         setActiveRoom('music');
         break;
       case 'creatures':
+        setSearchParams({ room: 'creatures' }, { replace: true });
         setActiveRoom('creatures');
         break;
       case 'cards':
+        setSearchParams({ room: 'cards' }, { replace: true });
         setActiveRoom('cards');
         break;
       case 'legal':
+        setSearchParams({ room: 'legal' }, { replace: true });
         setActiveRoom('legal');
         break;
       default:
+        setSearchParams({ room: 'hub' }, { replace: true });
         setActiveRoom('hub');
     }
-  }, [navigate]);
+  }, [navigate, setSearchParams]);
+
+  useEffect(() => {
+    const room = searchParams.get('room');
+    if (!room) return;
+    if (room === 'security' || room === 'music' || room === 'creatures' || room === 'cards' || room === 'hub' || room === 'legal') {
+      setActiveRoom(room);
+    }
+  }, [searchParams]);
 
   return (
     <TelegramProvider>

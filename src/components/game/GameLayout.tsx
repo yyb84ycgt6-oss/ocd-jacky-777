@@ -32,7 +32,7 @@ import JadeStorePage from '@/components/game/JadeStorePage';
 import JadeAdminPage from '@/components/game/JadeAdminPage';
 import DiamondExchangePage from '@/components/game/DiamondExchangePage';
 import BotForgePage from '@/components/game/BotForgePage';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 type Tab = 'dashboard' | 'city' | 'research' | 'army' | 'expeditions' | 'heroes' | 'shards' | 'map' | 'crafting' | 'diplomacy' | 'jukebox' | 'oracle' | 'eventlog' | 'quests' | 'trading' | 'gacha' | 'battlepass' | 'leaderboard' | 'shop' | 'bag' | 'marketplace' | 'guildbank' | 'premiumstore' | 'jadestore' | 'jadeadmin' | 'diamonds' | 'botforge';
@@ -47,6 +47,7 @@ export default function GameLayout() {
   const { resetGame } = useGame();
   const { t } = useI18n();
   const { playSfx } = useAudio();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -83,8 +84,22 @@ export default function GameLayout() {
   const handleTabChange = (tab: Tab) => {
     playSfx('click');
     setActiveTab(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', tab);
+      return next;
+    }, { replace: true });
     setMenuOpen(false);
   };
+
+  useEffect(() => {
+    const requested = searchParams.get('tab');
+    if (!requested) return;
+    const exists = TABS.some((t) => t.id === requested);
+    if (exists) {
+      setActiveTab(requested as Tab);
+    }
+  }, [searchParams]);
 
   const renderTab = () => {
     switch (activeTab) {
