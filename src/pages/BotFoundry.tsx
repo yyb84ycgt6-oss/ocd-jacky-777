@@ -44,6 +44,7 @@ type FreeAiOption = {
   access: "free-indefinite";
   download: string;
   notes: string;
+  launchCommand?: string;
 };
 
 type AddOnFeature = {
@@ -118,6 +119,12 @@ const FREE_AI_OPTIONS: FreeAiOption[] = [
   { id: "openhands", name: "OpenHands", type: "agent", access: "free-indefinite", download: "https://github.com/All-Hands-AI/OpenHands", notes: "Open-source coding agent platform." },
   { id: "dify", name: "Dify", type: "agent", access: "free-indefinite", download: "https://github.com/langgenius/dify", notes: "Open-source LLM app/agent platform." },
   { id: "flowise", name: "Flowise", type: "agent", access: "free-indefinite", download: "https://github.com/FlowiseAI/Flowise", notes: "Visual node-based agent builder." },
+  { id: "claude-code", name: "Claude Code", type: "agent", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch claude --model minimax-m3:cloud" },
+  { id: "codex-app", name: "Codex App", type: "ui", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch codex-app --model minimax-m3:cloud" },
+  { id: "openclaw", name: "OpenClaw", type: "agent", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch openclaw --model minimax-m3:cloud" },
+  { id: "hermes-agent", name: "Hermes Agent", type: "agent", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch hermes --model minimax-m3:cloud" },
+  { id: "codex", name: "Codex", type: "agent", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch codex --model minimax-m3:cloud" },
+  { id: "opencode", name: "OpenCode", type: "agent", access: "free-indefinite", download: "https://ollama.com", notes: "Potential app launch target using Minimax M3 cloud.", launchCommand: "ollama launch opencode --model minimax-m3:cloud" },
 ];
 
 const AI_ADDONS: AddOnFeature[] = [
@@ -525,6 +532,23 @@ export default function BotFoundry() {
                     <Tag subtle>{item.access}</Tag>
                   </div>
                   <p className="font-mono text-[11px] text-muted-foreground">{item.notes}</p>
+                  {item.launchCommand && (
+                    <div className="rounded-md border border-border bg-secondary/30 px-2 py-1 space-y-1">
+                      <div className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">Launch command</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <code className="font-mono text-[10px] text-foreground break-all">{item.launchCommand}</code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(item.launchCommand ?? "");
+                            toast.success("Launch command copied");
+                          }}
+                          className="inline-flex items-center gap-1 font-mono text-[10px] text-primary hover:underline shrink-0"
+                        >
+                          <Copy size={10} /> Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <a
                     href={item.download}
                     target="_blank"
