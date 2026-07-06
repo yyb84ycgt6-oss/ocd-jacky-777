@@ -1,0 +1,10 @@
+{
+  "rank": 9,
+  "name": "Content Production Agent Pipeline",
+  "description": "Automated draft/review/publish workflow for content",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

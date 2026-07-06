@@ -1,0 +1,272 @@
+[
+  {
+    "rank": 1,
+    "name": "Sub-GHz Signal Scanner",
+    "category": "radio",
+    "description": "Scan nearby Sub-GHz signals and save captures.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/01-sub-ghz-signal-scanner.json"
+  },
+  {
+    "rank": 2,
+    "name": "Sub-GHz Signal Replay",
+    "category": "radio",
+    "description": "Replay saved Sub-GHz captures for testing flows.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/02-sub-ghz-signal-replay.json"
+  },
+  {
+    "rank": 3,
+    "name": "RFID 125kHz Reader",
+    "category": "rfid",
+    "description": "Read and store 125kHz RFID cards.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/03-rfid-125khz-reader.json"
+  },
+  {
+    "rank": 4,
+    "name": "RFID 125kHz Writer",
+    "category": "rfid",
+    "description": "Write supported 125kHz RFID credentials.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/04-rfid-125khz-writer.json"
+  },
+  {
+    "rank": 5,
+    "name": "NFC Reader",
+    "category": "nfc",
+    "description": "Read NFC tags and card metadata.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/05-nfc-reader.json"
+  },
+  {
+    "rank": 6,
+    "name": "NFC Card Emulation",
+    "category": "nfc",
+    "description": "Emulate supported NFC card profiles.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/06-nfc-card-emulation.json"
+  },
+  {
+    "rank": 7,
+    "name": "MIFARE Classic Inspector",
+    "category": "nfc",
+    "description": "Inspect and manage MIFARE Classic sectors (authorized use).",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/07-mifare-classic-inspector.json"
+  },
+  {
+    "rank": 8,
+    "name": "iButton Reader",
+    "category": "ibutton",
+    "description": "Read iButton keys and identifiers.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/08-ibutton-reader.json"
+  },
+  {
+    "rank": 9,
+    "name": "iButton Emulation",
+    "category": "ibutton",
+    "description": "Emulate saved iButton identities.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/09-ibutton-emulation.json"
+  },
+  {
+    "rank": 10,
+    "name": "Infrared Signal Learner",
+    "category": "infrared",
+    "description": "Capture IR signals from remotes.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/10-infrared-signal-learner.json"
+  },
+  {
+    "rank": 11,
+    "name": "Infrared Universal Library",
+    "category": "infrared",
+    "description": "Browse and transmit known IR profiles.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/11-infrared-universal-library.json"
+  },
+  {
+    "rank": 12,
+    "name": "Infrared Raw Transmitter",
+    "category": "infrared",
+    "description": "Transmit custom/raw infrared patterns.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/12-infrared-raw-transmitter.json"
+  },
+  {
+    "rank": 13,
+    "name": "Bluetooth LE Device Scanner",
+    "category": "bluetooth",
+    "description": "Discover nearby BLE devices.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/13-bluetooth-le-device-scanner.json"
+  },
+  {
+    "rank": 14,
+    "name": "Bluetooth LE Device Info",
+    "category": "bluetooth",
+    "description": "Inspect BLE advertisement and device data.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/14-bluetooth-le-device-info.json"
+  },
+  {
+    "rank": 15,
+    "name": "U2F Security Key Mode",
+    "category": "security",
+    "description": "Use Flipper as hardware auth token where supported.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/15-u2f-security-key-mode.json"
+  },
+  {
+    "rank": 16,
+    "name": "BadUSB Text Injector",
+    "category": "usb",
+    "description": "Run approved keyboard automation scripts.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/16-badusb-text-injector.json"
+  },
+  {
+    "rank": 17,
+    "name": "BadUSB Shortcut Launcher",
+    "category": "usb",
+    "description": "Trigger OS shortcut sequences for workflows.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/17-badusb-shortcut-launcher.json"
+  },
+  {
+    "rank": 18,
+    "name": "GPIO Pin Monitor",
+    "category": "gpio",
+    "description": "Live monitor GPIO pin states.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/18-gpio-pin-monitor.json"
+  },
+  {
+    "rank": 19,
+    "name": "GPIO Logic Analyzer",
+    "category": "gpio",
+    "description": "Capture and inspect digital signal timing.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/19-gpio-logic-analyzer.json"
+  },
+  {
+    "rank": 20,
+    "name": "I2C Bus Scanner",
+    "category": "gpio",
+    "description": "Detect devices on connected I2C bus.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/20-i2c-bus-scanner.json"
+  },
+  {
+    "rank": 21,
+    "name": "SPI Bus Probe",
+    "category": "gpio",
+    "description": "Probe SPI communication lines.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/21-spi-bus-probe.json"
+  },
+  {
+    "rank": 22,
+    "name": "UART Serial Terminal",
+    "category": "serial",
+    "description": "Connect to UART devices for serial console.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/22-uart-serial-terminal.json"
+  },
+  {
+    "rank": 23,
+    "name": "CAN Bus Monitor (Module)",
+    "category": "automotive",
+    "description": "Monitor CAN frames with compatible module.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/23-can-bus-monitor-module.json"
+  },
+  {
+    "rank": 24,
+    "name": "Wi-Fi Devboard Scanner",
+    "category": "wifi",
+    "description": "Scan networks with supported Wi-Fi devboard add-on.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/24-wi-fi-devboard-scanner.json"
+  },
+  {
+    "rank": 25,
+    "name": "Wi-Fi Packet Monitor",
+    "category": "wifi",
+    "description": "Monitor Wi-Fi packet activity with devboard firmware.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/25-wi-fi-packet-monitor.json"
+  },
+  {
+    "rank": 26,
+    "name": "Frequency Analyzer",
+    "category": "radio",
+    "description": "Analyze signal frequency activity by band.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/26-frequency-analyzer.json"
+  },
+  {
+    "rank": 27,
+    "name": "Signal Level Meter",
+    "category": "radio",
+    "description": "Measure and compare capture signal strength.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/27-signal-level-meter.json"
+  },
+  {
+    "rank": 28,
+    "name": "File Manager",
+    "category": "system",
+    "description": "Manage on-device saved files and folders.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/28-file-manager.json"
+  },
+  {
+    "rank": 29,
+    "name": "Firmware Updater",
+    "category": "system",
+    "description": "Update Flipper firmware packages safely.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/29-firmware-updater.json"
+  },
+  {
+    "rank": 30,
+    "name": "Plugin Manager",
+    "category": "system",
+    "description": "Enable/disable and organize installed plugins.",
+    "integratedInWidget": true,
+    "integratedInFlipperTool": true,
+    "assetPath": "/assets/flipper-tools/30-plugin-manager.json"
+  }
+]

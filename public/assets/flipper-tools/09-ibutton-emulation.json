@@ -1,0 +1,8 @@
+{
+  "rank": 9,
+  "name": "iButton Emulation",
+  "category": "ibutton",
+  "description": "Emulate saved iButton identities.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

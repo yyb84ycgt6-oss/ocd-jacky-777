@@ -1,0 +1,8 @@
+{
+  "rank": 26,
+  "name": "Frequency Analyzer",
+  "category": "radio",
+  "description": "Analyze signal frequency activity by band.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

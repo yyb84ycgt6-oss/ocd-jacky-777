@@ -1,0 +1,8 @@
+{
+  "rank": 17,
+  "name": "BadUSB Shortcut Launcher",
+  "category": "usb",
+  "description": "Trigger OS shortcut sequences for workflows.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

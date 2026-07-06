@@ -1,0 +1,8 @@
+{
+  "rank": 15,
+  "name": "U2F Security Key Mode",
+  "category": "security",
+  "description": "Use Flipper as hardware auth token where supported.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

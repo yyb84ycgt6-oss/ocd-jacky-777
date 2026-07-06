@@ -1,0 +1,8 @@
+{
+  "rank": 2,
+  "name": "Sub-GHz Signal Replay",
+  "category": "radio",
+  "description": "Replay saved Sub-GHz captures for testing flows.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

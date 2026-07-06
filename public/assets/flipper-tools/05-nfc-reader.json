@@ -1,0 +1,8 @@
+{
+  "rank": 5,
+  "name": "NFC Reader",
+  "category": "nfc",
+  "description": "Read NFC tags and card metadata.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

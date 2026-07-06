@@ -1,0 +1,10 @@
+{
+  "rank": 7,
+  "name": "Personal Knowledge RAG Agent",
+  "description": "Private document indexing and retrieval-augmented responses",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

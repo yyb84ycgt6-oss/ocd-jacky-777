@@ -46,6 +46,19 @@ type FreeAiOption = {
   notes: string;
 };
 
+type AddOnFeature = {
+  id: string;
+  name: string;
+  category: "hub" | "router" | "agent" | "pipeline" | "gateway" | "workspace";
+  download: string;
+  requires: {
+    wifi: boolean;
+    bluetooth: boolean;
+    cloud: boolean;
+  };
+  summary: string;
+};
+
 const EXAMPLES = [
   "Telegram bot that converts YouTube links to MP3 and tracks usage",
   "Discord moderation bot with auto-replies and scheduled announcements",
@@ -107,6 +120,19 @@ const FREE_AI_OPTIONS: FreeAiOption[] = [
   { id: "flowise", name: "Flowise", type: "agent", access: "free-indefinite", download: "https://github.com/FlowiseAI/Flowise", notes: "Visual node-based agent builder." },
 ];
 
+const AI_ADDONS: AddOnFeature[] = [
+  { id: "cloud-multi-llm-hub", name: "Cloud Multi-LLM Hub", category: "hub", download: "/assets/addons/01-cloud-multi-llm-hub.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Unified cloud hub for multiple LLM providers with fallback support." },
+  { id: "intelligent-model-router", name: "Intelligent Model Router", category: "router", download: "/assets/addons/02-intelligent-model-router.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Task-aware routing by latency, cost, and capability." },
+  { id: "ios-shortcuts-agent-launcher", name: "iOS Shortcuts Agent Launcher", category: "agent", download: "/assets/addons/03-ios-shortcuts-agent-launcher.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Shortcut-triggered launch and handoff into agent workflows." },
+  { id: "voice-controlled-task-agent", name: "Voice-Controlled Task Agent", category: "agent", download: "/assets/addons/04-voice-controlled-task-agent.json", requires: { wifi: true, bluetooth: true, cloud: true }, summary: "Speech-driven task execution with optional device integrations." },
+  { id: "mobile-coding-workstation", name: "Mobile Coding Workstation", category: "workspace", download: "/assets/addons/05-mobile-coding-workstation.json", requires: { wifi: true, bluetooth: true, cloud: true }, summary: "Mobile coding interface with AI assistance and cloud sync." },
+  { id: "research-summarization-agent-pipeline", name: "Research + Summarization Agent Pipeline", category: "pipeline", download: "/assets/addons/06-research-summarization-agent-pipeline.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Research ingestion plus multi-stage summarization automation." },
+  { id: "personal-knowledge-rag-agent", name: "Personal Knowledge RAG Agent", category: "agent", download: "/assets/addons/07-personal-knowledge-rag-agent.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Private RAG agent for indexed personal knowledge." },
+  { id: "email-calendar-task-triage-agent", name: "Email/Calendar/Task Triage Agent", category: "agent", download: "/assets/addons/08-email-calendar-task-triage-agent.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Priority triage over communication and scheduling streams." },
+  { id: "content-production-agent-pipeline", name: "Content Production Agent Pipeline", category: "pipeline", download: "/assets/addons/09-content-production-agent-pipeline.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Draft-review-publish pipeline orchestration for content teams." },
+  { id: "private-secure-ai-gateway", name: "Private Secure AI Gateway", category: "gateway", download: "/assets/addons/10-private-secure-ai-gateway.json", requires: { wifi: true, bluetooth: false, cloud: true }, summary: "Secure policy, routing, and identity gateway for AI traffic." },
+];
+
 export default function BotFoundry() {
   const { user } = useAuth();
   const [description, setDescription] = useState("");
@@ -119,6 +145,10 @@ export default function BotFoundry() {
   const [assetQuery, setAssetQuery] = useState("");
   const [deploymentFilter, setDeploymentFilter] = useState<"all" | AiAsset["deployment"]>("all");
   const [categoryFilter, setCategoryFilter] = useState<"all" | string>("all");
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== "undefined" ? navigator.onLine : true));
+  const [bluetoothAvailable, setBluetoothAvailable] = useState(() => (
+    typeof navigator !== "undefined" && "bluetooth" in navigator
+  ));
   const codeRef = useRef<HTMLDivElement>(null);
 
   const categories = useMemo(
@@ -193,6 +223,17 @@ export default function BotFoundry() {
     }
   }, [code]);
 
+  useEffect(() => {
+    const updateOnline = () => setIsOnline(navigator.onLine);
+    setBluetoothAvailable("bluetooth" in navigator);
+    window.addEventListener("online", updateOnline);
+    window.addEventListener("offline", updateOnline);
+    return () => {
+      window.removeEventListener("online", updateOnline);
+      window.removeEventListener("offline", updateOnline);
+    };
+  }, []);
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -225,8 +266,9 @@ export default function BotFoundry() {
   const downloadAssetInventoryCSV = () => {
     const headers = ["id", "name", "category", "deployment", "priority", "role", "download", "source"];
     const rows = AI_ASSET_INVENTORY.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download, a.source]);
+    const sanitizeCsvCell = (value: unknown) => String(value).replace(/\r?\n|\r/g, " ");
     const csv = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .map(row => row.map(cell => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -253,6 +295,16 @@ export default function BotFoundry() {
     const a = document.createElement("a");
     a.href = url;
     a.download = "free-ai-options-indefinite.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAddOnsJSON = () => {
+    const blob = new Blob([JSON.stringify(AI_ADDONS, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ai-addons-and-features.json";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -296,6 +348,63 @@ export default function BotFoundry() {
                 <div className="font-mono text-[10px] tracking-widest text-primary">ASSET INVENTORY</div>
                 <h3 className="font-display text-lg font-bold">Top 25 Swift/iOS Repository Suggestions</h3>
                 <p className="text-xs text-muted-foreground">Exact provided list, each item also stored as an individual app asset file.</p>
+              </div>
+
+              {/* Add-ons and feature pack */}
+              <div className="rounded-xl border border-border bg-gradient-to-b from-primary/10 to-secondary/10 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <div className="font-mono text-[10px] tracking-widest text-primary">ADD-ONS + FEATURES</div>
+                    <h3 className="font-display text-lg font-bold">LLM/Agent Add-on Download Pack</h3>
+                    <p className="text-xs text-muted-foreground">Includes all 10 requested add-ons and capability requirements.</p>
+                  </div>
+                  <button onClick={downloadAddOnsJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                    <Download size={12} /> Download add-ons pack
+                  </button>
+                  <a href="/flipper-widget" className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                    Open Flipper widget
+                  </a>
+                </div>
+
+                <div className="grid sm:grid-cols-3 gap-2">
+                  <div className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                    <div className="font-mono text-xs font-bold">Wi-Fi / Network</div>
+                    <Tag subtle>{isOnline ? "online" : "offline"}</Tag>
+                    <p className="font-mono text-[11px] text-muted-foreground">Connectivity status used for cloud/system routing.</p>
+                  </div>
+                  <div className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                    <div className="font-mono text-xs font-bold">Bluetooth</div>
+                    <Tag subtle>{bluetoothAvailable ? "available" : "not available"}</Tag>
+                    <p className="font-mono text-[11px] text-muted-foreground">Browser support check for device integration flows.</p>
+                  </div>
+                  <div className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                    <div className="font-mono text-xs font-bold">Cloud Systems</div>
+                    <Tag subtle>enabled by design</Tag>
+                    <p className="font-mono text-[11px] text-muted-foreground">Add-ons include cloud-required route metadata.</p>
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {AI_ADDONS.map((addon) => (
+                    <div key={addon.id} className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                      <div className="font-mono text-xs font-bold">{addon.name}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Tag subtle>{addon.category}</Tag>
+                        {addon.requires.wifi && <Tag subtle>wifi</Tag>}
+                        {addon.requires.bluetooth && <Tag subtle>bluetooth</Tag>}
+                        {addon.requires.cloud && <Tag subtle>cloud</Tag>}
+                      </div>
+                      <p className="font-mono text-[11px] text-muted-foreground">{addon.summary}</p>
+                      <a
+                        href={addon.download}
+                        download
+                        className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
+                      >
+                        <Download size={11} /> Download add-on file
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={downloadAssetInventoryJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">

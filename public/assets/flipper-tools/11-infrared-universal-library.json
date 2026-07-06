@@ -1,0 +1,8 @@
+{
+  "rank": 11,
+  "name": "Infrared Universal Library",
+  "category": "infrared",
+  "description": "Browse and transmit known IR profiles.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

@@ -1,0 +1,8 @@
+{
+  "rank": 25,
+  "name": "Wi-Fi Packet Monitor",
+  "category": "wifi",
+  "description": "Monitor Wi-Fi packet activity with devboard firmware.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

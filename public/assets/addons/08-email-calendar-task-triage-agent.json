@@ -1,0 +1,10 @@
+{
+  "rank": 8,
+  "name": "Email/Calendar/Task Triage Agent",
+  "description": "Inbox and schedule triage with prioritized actions",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

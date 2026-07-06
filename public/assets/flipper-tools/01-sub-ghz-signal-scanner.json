@@ -1,0 +1,8 @@
+{
+  "rank": 1,
+  "name": "Sub-GHz Signal Scanner",
+  "category": "radio",
+  "description": "Scan nearby Sub-GHz signals and save captures.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

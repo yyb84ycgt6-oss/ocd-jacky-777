@@ -1,0 +1,8 @@
+{
+  "rank": 23,
+  "name": "CAN Bus Monitor (Module)",
+  "category": "automotive",
+  "description": "Monitor CAN frames with compatible module.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

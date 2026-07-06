@@ -1,0 +1,8 @@
+{
+  "rank": 29,
+  "name": "Firmware Updater",
+  "category": "system",
+  "description": "Update Flipper firmware packages safely.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

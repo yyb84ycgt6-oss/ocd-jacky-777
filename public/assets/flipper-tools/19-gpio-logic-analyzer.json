@@ -1,0 +1,8 @@
+{
+  "rank": 19,
+  "name": "GPIO Logic Analyzer",
+  "category": "gpio",
+  "description": "Capture and inspect digital signal timing.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}
