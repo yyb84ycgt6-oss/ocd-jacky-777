@@ -43,7 +43,7 @@ const EXAMPLES = [
   "Auth-guarded REST API that proxies OpenAI with per-key rate limits",
 ];
 
-const AI_ASSETS_25: AiAsset[] = [
+const AI_ASSET_INVENTORY: AiAsset[] = [
   { id: "ollama-llama31-8b", name: "Ollama + Llama 3.1 8B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/llama3.1", role: "Fast local default assistant" },
   { id: "ollama-qwen25-7b", name: "Ollama + Qwen2.5 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/qwen2.5", role: "Low-cost multilingual reasoning" },
   { id: "ollama-mistral-7b", name: "Ollama + Mistral 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/mistral", role: "Reliable small instruct model" },
@@ -97,13 +97,13 @@ export default function BotFoundry() {
   const codeRef = useRef<HTMLDivElement>(null);
 
   const categories = useMemo(
-    () => ["all", ...Array.from(new Set(AI_ASSETS_25.map(a => a.category)))],
+    () => ["all", ...Array.from(new Set(AI_ASSET_INVENTORY.map(a => a.category)))],
     []
   );
 
   const filteredAssets = useMemo(() => {
     const q = assetQuery.trim().toLowerCase();
-    return AI_ASSETS_25.filter((asset) => {
+    return AI_ASSET_INVENTORY.filter((asset) => {
       if (deploymentFilter !== "all" && asset.deployment !== deploymentFilter) return false;
       if (categoryFilter !== "all" && asset.category !== categoryFilter) return false;
       if (!q) return true;
@@ -188,7 +188,7 @@ export default function BotFoundry() {
   };
 
   const downloadAssetInventoryJSON = () => {
-    const blob = new Blob([JSON.stringify(AI_ASSETS_25, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(AI_ASSET_INVENTORY, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -199,7 +199,7 @@ export default function BotFoundry() {
 
   const downloadAssetInventoryCSV = () => {
     const headers = ["id", "name", "category", "deployment", "priority", "role", "download"];
-    const rows = AI_ASSETS_25.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download]);
+    const rows = AI_ASSET_INVENTORY.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download]);
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
