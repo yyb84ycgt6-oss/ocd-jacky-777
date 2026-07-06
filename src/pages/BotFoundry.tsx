@@ -25,6 +25,7 @@ type AiAsset = {
   deployment: "local" | "cloud" | "hybrid";
   priority: "easy" | "balanced" | "power";
   download: string;
+  source: string;
   role: string;
 };
 
@@ -36,6 +37,15 @@ type MobileKitItem = {
   purpose: string;
 };
 
+type FreeAiOption = {
+  id: string;
+  name: string;
+  type: "agent" | "model-runtime" | "ui";
+  access: "free-indefinite";
+  download: string;
+  notes: string;
+};
+
 const EXAMPLES = [
   "Telegram bot that converts YouTube links to MP3 and tracks usage",
   "Discord moderation bot with auto-replies and scheduled announcements",
@@ -44,31 +54,31 @@ const EXAMPLES = [
 ];
 
 const AI_ASSET_INVENTORY: AiAsset[] = [
-  { id: "ollama-llama31-8b", name: "Ollama + Llama 3.1 8B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/llama3.1", role: "Fast local default assistant" },
-  { id: "ollama-qwen25-7b", name: "Ollama + Qwen2.5 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/qwen2.5", role: "Low-cost multilingual reasoning" },
-  { id: "ollama-mistral-7b", name: "Ollama + Mistral 7B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/mistral", role: "Reliable small instruct model" },
-  { id: "ollama-gemma2-9b", name: "Ollama + Gemma 2 9B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/gemma2", role: "Efficient local quality model" },
-  { id: "ollama-phi3-mini", name: "Ollama + Phi-3 Mini", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/phi3", role: "Ultra-light local fallback" },
-  { id: "ollama-qwen-coder", name: "Ollama + Qwen2.5-Coder 7B", category: "Code", deployment: "local", priority: "easy", download: "https://ollama.com/library/qwen2.5-coder", role: "Primary local coding assistant" },
-  { id: "ollama-deepseek-coder", name: "Ollama + DeepSeek Coder 6.7B", category: "Code", deployment: "local", priority: "easy", download: "https://ollama.com/library/deepseek-coder", role: "Code generation and refactor" },
-  { id: "ollama-llama32-3b", name: "Ollama + Llama 3.2 3B", category: "LLM", deployment: "local", priority: "easy", download: "https://ollama.com/library/llama3.2", role: "Fast CPU-friendly chat" },
-  { id: "ollama-nomic-embed", name: "Ollama + Nomic Embed Text", category: "Embedding", deployment: "local", priority: "easy", download: "https://ollama.com/library/nomic-embed-text", role: "RAG embedding baseline" },
-  { id: "ollama-bge-m3", name: "Ollama + BGE-M3", category: "Embedding", deployment: "local", priority: "easy", download: "https://ollama.com/library/bge-m3", role: "Multilingual retrieval embedding" },
-  { id: "llamacpp-qwen14b", name: "llama.cpp + GGUF Qwen2.5 14B", category: "Runtime", deployment: "local", priority: "balanced", download: "https://github.com/ggerganov/llama.cpp", role: "Higher quality local inference" },
-  { id: "llamacpp-llama70b", name: "llama.cpp + GGUF Llama 3.1 70B", category: "Runtime", deployment: "hybrid", priority: "power", download: "https://github.com/ggerganov/llama.cpp", role: "Server-grade high quality model" },
-  { id: "vllm-qwen32b", name: "vLLM + Qwen2.5 32B", category: "Runtime", deployment: "cloud", priority: "power", download: "https://github.com/vllm-project/vllm", role: "High throughput API serving" },
-  { id: "vllm-mixtral", name: "vLLM + Mixtral 8x7B", category: "Runtime", deployment: "cloud", priority: "power", download: "https://github.com/vllm-project/vllm", role: "Balanced MoE cloud serving" },
-  { id: "faster-whisper", name: "Faster-Whisper", category: "Audio", deployment: "local", priority: "easy", download: "https://github.com/SYSTRAN/faster-whisper", role: "Speech-to-text pipeline" },
-  { id: "piper-tts", name: "Piper TTS", category: "Audio", deployment: "local", priority: "easy", download: "https://github.com/rhasspy/piper", role: "Fast local text-to-speech" },
-  { id: "open-webui", name: "Open WebUI", category: "UI", deployment: "local", priority: "easy", download: "https://github.com/open-webui/open-webui", role: "Unified local model interface" },
-  { id: "flowise", name: "Flowise", category: "Orchestration", deployment: "local", priority: "easy", download: "https://github.com/FlowiseAI/Flowise", role: "Visual agent-flow builder" },
-  { id: "langgraph", name: "LangGraph", category: "Orchestration", deployment: "hybrid", priority: "balanced", download: "https://github.com/langchain-ai/langgraph", role: "Stateful multi-agent graphs" },
-  { id: "crewai", name: "CrewAI", category: "Orchestration", deployment: "hybrid", priority: "balanced", download: "https://github.com/crewAIInc/crewAI", role: "Role-based agent teams" },
-  { id: "qdrant", name: "Qdrant", category: "VectorDB", deployment: "hybrid", priority: "balanced", download: "https://github.com/qdrant/qdrant", role: "Scalable vector search" },
-  { id: "chroma", name: "Chroma", category: "VectorDB", deployment: "local", priority: "easy", download: "https://github.com/chroma-core/chroma", role: "Simple local RAG store" },
-  { id: "pgvector", name: "pgvector", category: "VectorDB", deployment: "hybrid", priority: "balanced", download: "https://github.com/pgvector/pgvector", role: "Postgres-native embeddings" },
-  { id: "gemini-flash", name: "Gemini 2.5 Flash (fallback)", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://ai.google.dev", role: "Cheapest fast cloud fallback" },
-  { id: "openrouter-lowcost", name: "OpenRouter low-cost route", category: "Cloud API", deployment: "cloud", priority: "easy", download: "https://openrouter.ai", role: "Multi-provider budget fallback" },
+  { id: "enchanted", name: "Enchanted", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/01-enchanted.json", source: "https://github.com/gluonfield/enchanted", role: "iOS/macOS Ollama chat app" },
+  { id: "llmfarm", name: "LLMFarm", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/02-llmfarm.json", source: "https://github.com/guinmoon/LLMFarm", role: "On-device LLM framework for Apple devices" },
+  { id: "foundation-models-framework-lab", name: "Foundation-Models-Framework-Lab", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/03-foundation-models-framework-lab.json", source: "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab", role: "Apple Foundation Models iOS lab" },
+  { id: "swiftlm", name: "SwiftLM", category: "Swift/iOS", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/04-swiftlm.json", source: "https://github.com/SharpAI/SwiftLM", role: "MLX Swift LLM server + iOS app" },
+  { id: "hermex", name: "hermex", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/05-hermex.json", source: "https://github.com/uzairansaruzi/hermex", role: "Native iPhone app for Hermes agent" },
+  { id: "mlx-swift-chat", name: "mlx-swift-chat", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/06-mlx-swift-chat.json", source: "https://github.com/preternatural-explore/mlx-swift-chat", role: "MLX-based Swift chat client" },
+  { id: "foundation-models-playgrounds", name: "Foundation-Models-Playgrounds", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/07-foundation-models-playgrounds.json", source: "https://github.com/IvanCampos/Foundation-Models-Playgrounds", role: "Apple on-device AI playgrounds" },
+  { id: "spezillm", name: "SpeziLLM", category: "Swift/iOS", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/08-spezillm.json", source: "https://github.com/StanfordSpezi/SpeziLLM", role: "Stanford Spezi LLM stack for Swift/iOS" },
+  { id: "localllmclient", name: "LocalLLMClient", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/09-localllmclient.json", source: "https://github.com/tattn/LocalLLMClient", role: "Swift local LLM client" },
+  { id: "swiftrag", name: "Swiftrag", category: "Swift/iOS", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/10-swiftrag.json", source: "https://github.com/DonTizi/Swiftrag", role: "RAG in Swift for iOS/macOS + Ollama" },
+  { id: "llama-cpp-swift", name: "llama-cpp-swift", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/11-llama-cpp-swift.json", source: "https://github.com/srgtuszy/llama-cpp-swift", role: "Swift wrapper/client for llama.cpp" },
+  { id: "volocal", name: "volocal", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/12-volocal.json", source: "https://github.com/fikrikarim/volocal", role: "Local voice/LLM app tooling (Swift)" },
+  { id: "openvision", name: "OpenVision", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/13-openvision.json", source: "https://github.com/rayl15/OpenVision", role: "Swift vision/AI app project" },
+  { id: "chatgptswiftui", name: "ChatGPTSwiftUI", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/14-chatgptswiftui.json", source: "https://github.com/alfianlosari/ChatGPTSwiftUI", role: "SwiftUI ChatGPT app starter" },
+  { id: "chatgptui", name: "ChatGPTUI", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/15-chatgptui.json", source: "https://github.com/alfianlosari/ChatGPTUI", role: "iOS ChatGPT UI sample" },
+  { id: "aicat", name: "AICat", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/16-aicat.json", source: "https://github.com/Panl/AICat", role: "AI chat iOS app repo" },
+  { id: "chatgpt-chatbot", name: "ChatGPT_Chatbot", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/17-chatgpt-chatbot.json", source: "https://github.com/motianjun4/ChatGPT_Chatbot", role: "iOS chatbot app in Swift" },
+  { id: "gptmessage", name: "GPTMessage", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/18-gptmessage.json", source: "https://github.com/lhuanyu/GPTMessage", role: "iOS/macOS GPT chat app" },
+  { id: "gptalks", name: "GPTalks", category: "Swift/iOS", deployment: "cloud", priority: "easy", download: "/assets/suggestions/19-gptalks.json", source: "https://github.com/SilverMarcs/GPTalks", role: "Swift AI chat app" },
+  { id: "swiftchat", name: "swiftchat", category: "Swift/iOS", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/20-swiftchat.json", source: "https://github.com/zahidkhawaja/swiftchat", role: "Swift chat app with LLM backend support" },
+  { id: "ichi", name: "Ichi", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/21-ichi.json", source: "https://github.com/rudrankriyam/Ichi", role: "Swift iOS AI app project" },
+  { id: "rllm", name: "RLLM", category: "Swift/iOS", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/22-rllm.json", source: "https://github.com/DanielZhangyc/RLLM", role: "Swift LLM app/framework repo" },
+  { id: "eisonai", name: "eisonAI", category: "Swift/iOS", deployment: "local", priority: "easy", download: "/assets/suggestions/23-eisonai.json", source: "https://github.com/qoli/eisonAI", role: "Swift AI iOS tooling" },
+  { id: "xybrid", name: "xybrid", category: "Mobile SDK", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/24-xybrid.json", source: "https://github.com/xybrid-ai/xybrid", role: "Mobile/on-device AI SDK (includes iOS)" },
+  { id: "runanywhere-sdks", name: "Runanywhere SDKs", category: "Mobile SDK", deployment: "hybrid", priority: "balanced", download: "/assets/suggestions/25-runanywhere-sdks.json", source: "https://github.com/RunanywhereAI/runanywhere-sdks", role: "Local/mobile AI toolkit incl. Apple targets" },
 ];
 
 const MOBILE_KIT: MobileKitItem[] = [
@@ -80,6 +90,21 @@ const MOBILE_KIT: MobileKitItem[] = [
   { id: "battery-policy", name: "Battery/thermal policy", target: "iPhone 11/12+ and older devices", mode: "on-device", purpose: "Auto-downgrade models under heat/battery pressure" },
   { id: "network-policy", name: "Network-aware model routing", target: "Any mobile", mode: "hybrid", purpose: "Prefer local on poor signal, cloud on strong network" },
   { id: "secure-keyflow", name: "Secure API key/session flow", target: "All mobile devices", mode: "cloud-assisted", purpose: "No long-lived secrets in client storage" },
+];
+
+const FREE_AI_OPTIONS: FreeAiOption[] = [
+  { id: "ollama", name: "Ollama", type: "model-runtime", access: "free-indefinite", download: "https://github.com/ollama/ollama", notes: "Local LLM runtime with no subscription requirement." },
+  { id: "llama-cpp", name: "llama.cpp", type: "model-runtime", access: "free-indefinite", download: "https://github.com/ggerganov/llama.cpp", notes: "Open-source inference engine for GGUF models." },
+  { id: "vllm", name: "vLLM", type: "model-runtime", access: "free-indefinite", download: "https://github.com/vllm-project/vllm", notes: "High-throughput open-source model serving runtime." },
+  { id: "open-webui", name: "Open WebUI", type: "ui", access: "free-indefinite", download: "https://github.com/open-webui/open-webui", notes: "Self-hosted UI for local and remote models." },
+  { id: "librechat", name: "LibreChat", type: "ui", access: "free-indefinite", download: "https://github.com/danny-avila/LibreChat", notes: "Open-source multi-provider chat UI you can self-host." },
+  { id: "anythingllm", name: "AnythingLLM", type: "ui", access: "free-indefinite", download: "https://github.com/Mintplex-Labs/anything-llm", notes: "Local-first AI workspace with RAG." },
+  { id: "crewai", name: "CrewAI", type: "agent", access: "free-indefinite", download: "https://github.com/crewAIInc/crewAI", notes: "Agent orchestration framework (open-source core)." },
+  { id: "langgraph", name: "LangGraph", type: "agent", access: "free-indefinite", download: "https://github.com/langchain-ai/langgraph", notes: "Stateful multi-agent workflows." },
+  { id: "autogen", name: "AutoGen", type: "agent", access: "free-indefinite", download: "https://github.com/microsoft/autogen", notes: "Open-source agent framework from Microsoft." },
+  { id: "openhands", name: "OpenHands", type: "agent", access: "free-indefinite", download: "https://github.com/All-Hands-AI/OpenHands", notes: "Open-source coding agent platform." },
+  { id: "dify", name: "Dify", type: "agent", access: "free-indefinite", download: "https://github.com/langgenius/dify", notes: "Open-source LLM app/agent platform." },
+  { id: "flowise", name: "Flowise", type: "agent", access: "free-indefinite", download: "https://github.com/FlowiseAI/Flowise", notes: "Visual node-based agent builder." },
 ];
 
 export default function BotFoundry() {
@@ -198,8 +223,8 @@ export default function BotFoundry() {
   };
 
   const downloadAssetInventoryCSV = () => {
-    const headers = ["id", "name", "category", "deployment", "priority", "role", "download"];
-    const rows = AI_ASSET_INVENTORY.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download]);
+    const headers = ["id", "name", "category", "deployment", "priority", "role", "download", "source"];
+    const rows = AI_ASSET_INVENTORY.map(a => [a.id, a.name, a.category, a.deployment, a.priority, a.role, a.download, a.source]);
     const csv = [headers, ...rows]
       .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\n");
@@ -218,6 +243,16 @@ export default function BotFoundry() {
     const a = document.createElement("a");
     a.href = url;
     a.download = "mobile-ai-kit.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadFreeAiOptionsJSON = () => {
+    const blob = new Blob([JSON.stringify(FREE_AI_OPTIONS, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "free-ai-options-indefinite.json";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -259,8 +294,8 @@ export default function BotFoundry() {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <div className="font-mono text-[10px] tracking-widest text-primary">ASSET INVENTORY</div>
-                <h3 className="font-display text-lg font-bold">Top 25 Stack Assets</h3>
-                <p className="text-xs text-muted-foreground">Prioritized: easy local first, then low-cost cloud fallback.</p>
+                <h3 className="font-display text-lg font-bold">Top 25 Swift/iOS Repository Suggestions</h3>
+                <p className="text-xs text-muted-foreground">Exact provided list, each item also stored as an individual app asset file.</p>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={downloadAssetInventoryJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
@@ -312,14 +347,23 @@ export default function BotFoundry() {
                     <Tag subtle>{asset.priority}</Tag>
                   </div>
                   <p className="font-mono text-[11px] text-muted-foreground">{asset.role}</p>
-                  <a
-                    href={asset.download}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
-                  >
-                    <Download size={11} /> Download source
-                  </a>
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href={asset.download}
+                      download
+                      className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
+                    >
+                      <Download size={11} /> Download asset file
+                    </a>
+                    <a
+                      href={asset.source}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
+                    >
+                      <Download size={11} /> Open source repo
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>
@@ -346,6 +390,40 @@ export default function BotFoundry() {
                     <Tag subtle>{item.mode}</Tag>
                   </div>
                   <p className="font-mono text-[11px] text-muted-foreground">{item.purpose}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Free AI options */}
+          <div className="rounded-xl border border-border bg-gradient-to-b from-secondary/40 to-secondary/10 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <div className="font-mono text-[10px] tracking-widest text-primary">FREE AI SELECTION</div>
+                <h3 className="font-display text-lg font-bold">Indefinitely Free Agent + AI Options</h3>
+                <p className="text-xs text-muted-foreground">Only open-source/self-hostable options with no required paid subscription.</p>
+              </div>
+              <button onClick={downloadFreeAiOptionsJSON} className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-xs font-mono hover:bg-secondary/80">
+                <Download size={12} /> Download free AI list
+              </button>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {FREE_AI_OPTIONS.map((item) => (
+                <div key={item.id} className="p-3 rounded-md border border-border bg-background/50 space-y-1.5">
+                  <div className="font-mono text-xs font-bold">{item.name}</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Tag subtle>{item.type}</Tag>
+                    <Tag subtle>{item.access}</Tag>
+                  </div>
+                  <p className="font-mono text-[11px] text-muted-foreground">{item.notes}</p>
+                  <a
+                    href={item.download}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline"
+                  >
+                    <Download size={11} /> Open project
+                  </a>
                 </div>
               ))}
             </div>
