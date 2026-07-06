@@ -1352,32 +1352,34 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
                 disabled={isProcessing}
                 rows={1}
               />
-              <VoiceRecorder
-                onRecordingComplete={(file) => {
-                  const pf: PendingFile = {
-                    file,
-                    id: `${Date.now()}-voice`,
-                    preview: URL.createObjectURL(file),
-                  };
-                  setPendingFiles((prev) => [...prev, pf]);
-                }}
-                disabled={isProcessing}
-              />
-              {rateLimitCooldown > 0 ? (
-                <div className="p-3 rounded-sm bg-destructive/20 border border-destructive/40 text-destructive font-mono text-xs flex items-center gap-2 flex-shrink-0 animate-pulse">
-                  <Zap size={14} />
-                  {rateLimitCooldown}s
-                </div>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
-                  className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical flex-shrink-0"
-                  title="Send (Enter)"
-                >
-                  <Send size={16} />
-                </button>
-              )}
+              <div className="flex flex-col items-center gap-2 self-end flex-shrink-0">
+                <VoiceRecorder
+                  onRecordingComplete={(file) => {
+                    const pf: PendingFile = {
+                      file,
+                      id: `${Date.now()}-voice`,
+                      preview: URL.createObjectURL(file),
+                    };
+                    setPendingFiles((prev) => [...prev, pf]);
+                  }}
+                  disabled={isProcessing}
+                />
+                {rateLimitCooldown > 0 ? (
+                  <div className="p-3 rounded-sm bg-destructive/20 border border-destructive/40 text-destructive font-mono text-xs flex items-center gap-2 animate-pulse">
+                    <Zap size={14} />
+                    {rateLimitCooldown}s
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
+                    className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical"
+                    title="Send (Enter)"
+                  >
+                    <Send size={16} />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between mt-1.5 ml-5">
               <div className="relative">
