@@ -458,22 +458,74 @@ echo "======================================================================"
 echo ""
 `;
 
-    const body = TOOLBOX_DATA.map(c => {
-      const categoryHeader = `echo "--- [CATEGORY] ${c.category} ---"`;
-      const toolLines = c.tools.map(t => {
-        return `echo "  [#\${t.id}] ${t.name} - ${t.desc}"\necho "        Acquisition URL: ${t.url}"\necho ""`;
-      }).join("\n");
-      return `${categoryHeader}\n${toolLines}`;
-    }).join("\n\n");
+    // Step 1: Process each category individually
+    const categoryScripts = TOOLBOX_DATA.map(cat => {
+      const categoryHeaderCmd = `echo "--- [CATEGORY] ${cat.category} ---"`;
 
-    const fullScript = `${header}\n${body}\n\necho "All 250 tool entries listed successfully!"`;
+      // Step 2: Process tools inside this category
+      const toolCmds = cat.tools.map(tool => {
+        const { id, name, desc, url } = tool;
+
+        // Step 3: Determine the correct check & install commands
+        let checkCmd = "";
+        let installCmd = "";
+
+        const lowerName = name.toLowerCase();
+        const lowerCat = cat.category.toLowerCase();
+
+        if (
+          lowerCat.includes("languages") ||
+          lowerCat.includes("environments") ||
+          lowerCat.includes("infrastructure") ||
+          lowerCat.includes("hardware") ||
+          lowerCat.includes("knowledge")
+        ) {
+          // System/Binary tool
+          checkCmd = `command -v ${name.split(" ")[0].toLowerCase()} &> /dev/null`;
+          installCmd = `echo "        To install, use system package manager or download from: ${url}"`;
+        } else if (lowerCat.includes("ui & frontend") && (lowerName.includes("next.js") || lowerName.includes("vue.js"))) {
+          // Node.js packages
+          checkCmd = `npm list -g ${lowerName.split(" ")[0]} &> /dev/null`;
+          installCmd = `echo "        To install: npm install -g ${lowerName.split(" ")[0]}"`;
+        } else {
+          // Python packages (majority of AI tools)
+          const pipPkg = lowerName.replace("🤗 ", "").split(" ")[0];
+          checkCmd = `python3 -c "import ${pipPkg.replace("-", "_")}" &> /dev/null`;
+          installCmd = `echo "        To install: pip install ${pipPkg}"`;
+        }
+
+        // Return formatted echo lines
+        const logId = `[#\${id}] ${name}`;
+        const logDesc = desc.replace(/"/g, '\\"');
+        const logUrl = `URL: ${url}`;
+
+        return `echo "${logId} - ${logDesc}"\n` +
+               `echo "        ${logUrl}"\n` +
+               `if ${checkCmd}; then\n` +
+               `  echo "        Status: Installed & Verified 🟢"\n` +
+               `else\n` +
+               `  echo "        Status: Not detected 🔴"\n` +
+               `  ${installCmd}\n` +
+               `fi\necho ""`;
+      });
+
+      // Step 4: Join tool commands for this category
+      const toolScriptString = toolCmds.join("\n");
+      return `${categoryHeaderCmd}\n${toolScriptString}`;
+    });
+
+    // Step 5: Combine all categories
+    const body = categoryScripts.join("\n\n");
+    const fullScript = `${header}\n${body}\n\necho "All 250 tool entries listed and checked successfully!"`;
+
+    // Trigger download
     const blob = new Blob([fullScript], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = blobUrl;
     a.download = "setup_250_toolbox.sh";
     a.click();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(blobUrl);
     toast.success("Master installation bash script dispatched!");
   };
 

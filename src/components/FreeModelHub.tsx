@@ -376,8 +376,8 @@ export default function FreeModelHub() {
                 </div>
 
                 <p className="text-xs text-muted-foreground font-mono leading-relaxed">
-                  Download any weight package below directly into the application space.
-                  Wired with local Huffman/LZW compression cycles to stay ultra-dormant in RAM when not actively written in code.
+                  [Simulation Sandbox] Explore and test the GGUF compression-decompression and activation cycles of 100+ free models.
+                  Wired with local Huffman/LZW compression cycles to stay ultra-dormant in RAM when not actively written. Use "Get Python Script" to download actual weights locally.
                 </p>
 
                 {/* Search and Universal Script Downloader */}
@@ -442,6 +442,7 @@ export default function FreeModelHub() {
                     const isDownloading = state.status === "downloading" || state.status === "compressing";
                     const isCompressed = state.status === "compressed";
                     const isExpanded = state.status === "expanded";
+                    const savedPercentage = Math.max(0, Math.round(100 - (state.compressedSizeKb / (model.size_mb * 1024)) * 100));
 
                     return (
                       <div
@@ -555,7 +556,7 @@ export default function FreeModelHub() {
                               ))}
                               {isCompressed && (
                                 <div className="text-indigo-400 font-semibold mt-1">
-                                  ⚡ GGUF Compression complete. Code Footprint: {state.compressedSizeKb} KB ({Math.max(0, Math.round(100 - (state.compressedSizeKb / (model.size_mb * 1024)) * 100))}% memory saved).
+                                  ⚡ GGUF Compression complete. Code Footprint: {state.compressedSizeKb} KB ({savedPercentage}% memory saved).
                                 </div>
                               )}
                               {isExpanded && (
