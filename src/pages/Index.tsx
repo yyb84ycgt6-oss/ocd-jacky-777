@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import GeneralToolbox from "@/components/GeneralToolbox";
 import { streamChat, JACKIE_MODELS, type ChatMessage, type JackieModelId } from "@/lib/jackie-stream";
 import {
   listConversations,
@@ -99,6 +100,7 @@ const Sidebar = ({
   onCreateTag,
   onDeleteTag,
   onToggleTag,
+  onOpenToolbox,
 }: {
   conversations: Conversation[];
   activeId: string | null;
@@ -119,6 +121,7 @@ const Sidebar = ({
   onCreateTag: (name: string, color: string) => void;
   onDeleteTag: (id: string) => void;
   onToggleTag: (convId: string, tagId: string, has: boolean) => void;
+  onOpenToolbox: () => void;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewTag, setShowNewTag] = useState(false);
@@ -372,6 +375,12 @@ const Sidebar = ({
           <a href="/keys" className="flex items-center gap-2 px-2 py-2 font-mono text-xs text-primary hover:bg-secondary/50 rounded-sm transition-colors">
             🔑 API Key Vault
           </a>
+          <button
+            onClick={onOpenToolbox}
+            className="w-full flex items-center gap-2 px-2 py-2 font-mono text-xs text-indigo-400 hover:bg-secondary/50 rounded-sm transition-colors text-left font-bold"
+          >
+            🧰 General Toolbox (250)
+          </button>
           <a
             href="https://dragon-chaos-wars.lovable.app"
             target="_blank"
@@ -539,6 +548,7 @@ const Index = () => {
   const [tagMap, setTagMap] = useState<Record<string, string[]>>({});
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
+  const [toolboxOpen, setToolboxOpen] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const changeModel = useCallback(async (model: JackieModelId) => {
@@ -1144,6 +1154,7 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
         onCreateTag={handleCreateTag}
         onDeleteTag={handleDeleteTag}
         onToggleTag={handleToggleTag}
+        onOpenToolbox={() => setToolboxOpen(true)}
       />
 
       <main
@@ -1330,6 +1341,7 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
           </div>
         </div>
       </main>
+      <GeneralToolbox isOpen={toolboxOpen} onClose={() => setToolboxOpen(false)} />
 
       <style>{`
         @keyframes progressSlide {
