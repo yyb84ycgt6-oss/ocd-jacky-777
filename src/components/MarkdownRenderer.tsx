@@ -22,6 +22,13 @@ type ChartData = {
   data: ChartDataItem[];
 };
 
+function createMermaidId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `mermaid-${crypto.randomUUID()}`;
+  }
+  return `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 // ─── Copy Button ──────────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
@@ -124,12 +131,8 @@ function MermaidDiagram({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const id = useMemo(() => {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      return `mermaid-${crypto.randomUUID()}`;
-    }
-    return `mermaid-${Math.random().toString(36).slice(2, 9)}`;
-  }, []);
+  const idRef = useRef<string>(createMermaidId());
+  const id = idRef.current;
 
   useEffect(() => {
     let cancelled = false;
@@ -308,7 +311,7 @@ function ChartVisualizer({ code }: { code: string }) {
   if (!chartData) return null;
 
   // Render as a simple bar chart using CSS
-  const maxVal = Math.max(...chartData.data.map((d) => d.value || 0), 1);
+  const maxVal = Math.max(...chartData.data.map((d) => d.value), 1);
 
   return (
     <div className="my-3 rounded-md border border-border overflow-hidden">
