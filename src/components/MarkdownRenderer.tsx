@@ -136,7 +136,7 @@ function MermaidDiagram({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const [id] = useState(createMermaidId);
+  const [id] = useState(() => createMermaidId());
 
   useEffect(() => {
     let cancelled = false;
@@ -329,7 +329,7 @@ function ChartVisualizer({ code }: { code: string }) {
         {chartData.data.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">
-              {item.label || item.name || "Unlabeled"}
+              {item.label ?? item.name ?? "Unlabeled"}
             </span>
             <div className="flex-1 h-6 bg-secondary/30 rounded overflow-hidden">
               <div
