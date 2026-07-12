@@ -29,6 +29,7 @@ import GunitUsers from "./pages/gunit/GunitUsers";
 import GunitApiKeys from "./pages/gunit/GunitApiKeys";
 import SphereCommand from "./pages/SphereCommand";
 import JackieControl from "./pages/JackieControl";
+import FlipperZeroWidget from "./pages/FlipperZeroWidget";
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <JackieControl />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/flipper-widget"
+                element={
+                  <ProtectedRoute>
+                    <FlipperZeroWidget />
                   </ProtectedRoute>
                 }
               />

@@ -1,0 +1,8 @@
+{
+  "rank": 6,
+  "name": "NFC Card Emulation",
+  "category": "nfc",
+  "description": "Emulate supported NFC card profiles.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

@@ -1,0 +1,8 @@
+{
+  "rank": 16,
+  "name": "BadUSB Text Injector",
+  "category": "usb",
+  "description": "Run approved keyboard automation scripts.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

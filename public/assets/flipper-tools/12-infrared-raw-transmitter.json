@@ -1,0 +1,8 @@
+{
+  "rank": 12,
+  "name": "Infrared Raw Transmitter",
+  "category": "infrared",
+  "description": "Transmit custom/raw infrared patterns.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

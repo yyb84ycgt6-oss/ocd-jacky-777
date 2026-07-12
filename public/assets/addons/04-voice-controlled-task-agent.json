@@ -1,0 +1,10 @@
+{
+  "rank": 4,
+  "name": "Voice-Controlled Task Agent",
+  "description": "Speech-driven command routing for task execution",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": true,
+    "cloud": true
+  }
+}

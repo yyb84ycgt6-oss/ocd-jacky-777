@@ -1,0 +1,8 @@
+{
+  "rank": 13,
+  "name": "Bluetooth LE Device Scanner",
+  "category": "bluetooth",
+  "description": "Discover nearby BLE devices.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

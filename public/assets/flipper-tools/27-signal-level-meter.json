@@ -1,0 +1,8 @@
+{
+  "rank": 27,
+  "name": "Signal Level Meter",
+  "category": "radio",
+  "description": "Measure and compare capture signal strength.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

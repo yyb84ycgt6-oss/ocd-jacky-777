@@ -1,0 +1,8 @@
+{
+  "rank": 8,
+  "name": "iButton Reader",
+  "category": "ibutton",
+  "description": "Read iButton keys and identifiers.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

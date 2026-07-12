@@ -1,0 +1,10 @@
+{
+  "rank": 10,
+  "name": "Private Secure AI Gateway",
+  "description": "Secure private gateway for identity, routing, and policy controls",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

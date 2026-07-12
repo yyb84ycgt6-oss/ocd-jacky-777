@@ -4,6 +4,36 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Copy, Check, Play, RotateCcw, Maximize2, Minimize2, Eye, Code } from "lucide-react";
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+type ChartDataItem = {
+  label?: string;
+  name?: string;
+  value: number;
+};
+
+type ChartData = {
+  title?: string;
+  data: ChartDataItem[];
+};
+
+function createMermaidId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `mermaid-${crypto.randomUUID()}`;
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint32Array(2);
+    crypto.getRandomValues(bytes);
+    return `mermaid-${bytes[0].toString(36)}${bytes[1].toString(36)}`;
+  }
+  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 // ─── Copy Button ──────────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
@@ -106,8 +136,7 @@ function MermaidDiagram({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const id = useMemo(() => `mermaid-${Math.random().toString(36).slice(2, 9)}`, []);
+  const [id] = useState(() => createMermaidId());
 
   useEffect(() => {
     let cancelled = false;
@@ -134,8 +163,8 @@ function MermaidDiagram({ code }: { code: string }) {
           tempDiv.remove();
           document.getElementById("d" + id)?.remove();
         }
-      } catch (e: any) {
-        if (!cancelled) setError(e.message || "Failed to render diagram");
+      } catch (error: unknown) {
+        if (!cancelled) setError(getErrorMessage(error));
       }
     }, 50); // Small delay to ensure DOM is ready
     return () => { cancelled = true; clearTimeout(timer); };
@@ -172,7 +201,7 @@ function MermaidDiagram({ code }: { code: string }) {
 
 // ─── JSON Visualizer ──────────────────────────────────────
 
-function JsonTree({ data, depth = 0 }: { data: any; depth?: number }) {
+function JsonTree({ data, depth = 0 }: { data: unknown; depth?: number }) {
   const [collapsed, setCollapsed] = useState(depth > 2);
 
   if (data === null) return <span className="text-orange-400">null</span>;
@@ -199,7 +228,8 @@ function JsonTree({ data, depth = 0 }: { data: any; depth?: number }) {
   }
 
   if (typeof data === "object") {
-    const keys = Object.keys(data);
+    const objectData = data as Record<string, unknown>;
+    const keys = Object.keys(objectData);
     if (keys.length === 0) return <span className="text-muted-foreground">{"{}"}</span>;
     return (
       <span>
@@ -209,7 +239,7 @@ function JsonTree({ data, depth = 0 }: { data: any; depth?: number }) {
         {!collapsed && (
           <div className="ml-4 border-l border-border/50 pl-2">
             {keys.map((key) => (
-              <div key={key}><span className="text-primary text-xs">{key}: </span><JsonTree data={data[key]} depth={depth + 1} /></div>
+              <div key={key}><span className="text-primary text-xs">{key}: </span><JsonTree data={objectData[key]} depth={depth + 1} /></div>
             ))}
           </div>
         )}
@@ -223,7 +253,7 @@ function JsonTree({ data, depth = 0 }: { data: any; depth?: number }) {
 function JsonVisualizer({ code }: { code: string }) {
   const parsed = useMemo(() => {
     try { return { data: JSON.parse(code), error: null }; }
-    catch (e: any) { return { data: null, error: e.message }; }
+    catch (error: unknown) { return { data: null, error: getErrorMessage(error) }; }
   }, [code]);
 
   const [showTree, setShowTree] = useState(true);
@@ -253,13 +283,30 @@ function JsonVisualizer({ code }: { code: string }) {
 // ─── Chart Visualizer (for ```chart blocks) ───────────────
 
 function ChartVisualizer({ code }: { code: string }) {
-  const [error, setError] = useState<string>("");
-
   const chartData = useMemo(() => {
     try {
       const parsed = JSON.parse(code);
-      if (!parsed.data || !Array.isArray(parsed.data)) return null;
-      return parsed;
+      if (!isRecord(parsed) || !Array.isArray(parsed.data)) return null;
+
+      const normalizedData: ChartDataItem[] = parsed.data
+        .map((item): ChartDataItem | null => {
+          if (!isRecord(item)) return null;
+          const value = item.value;
+          if (typeof value !== "number" || !Number.isFinite(value)) return null;
+          return {
+            label: typeof item.label === "string" ? item.label : undefined,
+            name: typeof item.name === "string" ? item.name : undefined,
+            value,
+          };
+        })
+        .filter((item): item is ChartDataItem => item !== null);
+
+      const normalized: ChartData = {
+        title: typeof parsed.title === "string" ? parsed.title : undefined,
+        data: normalizedData,
+      };
+
+      return normalized;
     } catch {
       return null;
     }
@@ -268,7 +315,7 @@ function ChartVisualizer({ code }: { code: string }) {
   if (!chartData) return null;
 
   // Render as a simple bar chart using CSS
-  const maxVal = Math.max(...chartData.data.map((d: any) => d.value || 0), 1);
+  const maxVal = Math.max(...chartData.data.map((d) => d.value), 1);
 
   return (
     <div className="my-3 rounded-md border border-border overflow-hidden">
@@ -279,9 +326,11 @@ function ChartVisualizer({ code }: { code: string }) {
         <CopyButton text={code} />
       </div>
       <div className="p-4 space-y-2">
-        {chartData.data.map((item: any, i: number) => (
+        {chartData.data.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">{item.label || item.name}</span>
+            <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">
+              {item.label ?? item.name ?? "Unlabeled"}
+            </span>
             <div className="flex-1 h-6 bg-secondary/30 rounded overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-primary to-primary/60 rounded transition-all duration-500"

@@ -1,0 +1,10 @@
+{
+  "rank": 3,
+  "name": "iOS Shortcuts Agent Launcher",
+  "description": "Shortcut-triggered agent launch flows for iPhone automation",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

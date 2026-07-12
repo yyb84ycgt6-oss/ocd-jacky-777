@@ -1,0 +1,10 @@
+{
+  "rank": 6,
+  "name": "Research + Summarization Agent Pipeline",
+  "description": "Crawler + summarizer pipeline for research workflows",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

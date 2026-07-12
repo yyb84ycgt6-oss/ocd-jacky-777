@@ -1,0 +1,6 @@
+{
+  "rank": 4,
+  "name": "SwiftLM",
+  "description": "MLX Swift LLM server + iOS app",
+  "repository": "https://github.com/SharpAI/SwiftLM"
+}

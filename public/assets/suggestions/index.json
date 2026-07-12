@@ -1,0 +1,177 @@
+[
+  {
+    "rank": 1,
+    "name": "Enchanted",
+    "description": "iOS/macOS Ollama chat app",
+    "repository": "https://github.com/gluonfield/enchanted",
+    "assetPath": "/assets/suggestions/01-enchanted.json"
+  },
+  {
+    "rank": 2,
+    "name": "LLMFarm",
+    "description": "on-device LLM framework for Apple devices",
+    "repository": "https://github.com/guinmoon/LLMFarm",
+    "assetPath": "/assets/suggestions/02-llmfarm.json"
+  },
+  {
+    "rank": 3,
+    "name": "Foundation-Models-Framework-Lab",
+    "description": "Apple Foundation Models iOS lab",
+    "repository": "https://github.com/rudrankriyam/Foundation-Models-Framework-Lab",
+    "assetPath": "/assets/suggestions/03-foundation-models-framework-lab.json"
+  },
+  {
+    "rank": 4,
+    "name": "SwiftLM",
+    "description": "MLX Swift LLM server + iOS app",
+    "repository": "https://github.com/SharpAI/SwiftLM",
+    "assetPath": "/assets/suggestions/04-swiftlm.json"
+  },
+  {
+    "rank": 5,
+    "name": "hermex",
+    "description": "native iPhone app for Hermes agent",
+    "repository": "https://github.com/uzairansaruzi/hermex",
+    "assetPath": "/assets/suggestions/05-hermex.json"
+  },
+  {
+    "rank": 6,
+    "name": "mlx-swift-chat",
+    "description": "MLX-based Swift chat client",
+    "repository": "https://github.com/preternatural-explore/mlx-swift-chat",
+    "assetPath": "/assets/suggestions/06-mlx-swift-chat.json"
+  },
+  {
+    "rank": 7,
+    "name": "Foundation-Models-Playgrounds",
+    "description": "Apple on-device AI playgrounds",
+    "repository": "https://github.com/IvanCampos/Foundation-Models-Playgrounds",
+    "assetPath": "/assets/suggestions/07-foundation-models-playgrounds.json"
+  },
+  {
+    "rank": 8,
+    "name": "SpeziLLM",
+    "description": "Stanford Spezi LLM stack for Swift/iOS",
+    "repository": "https://github.com/StanfordSpezi/SpeziLLM",
+    "assetPath": "/assets/suggestions/08-spezillm.json"
+  },
+  {
+    "rank": 9,
+    "name": "LocalLLMClient",
+    "description": "Swift local LLM client",
+    "repository": "https://github.com/tattn/LocalLLMClient",
+    "assetPath": "/assets/suggestions/09-localllmclient.json"
+  },
+  {
+    "rank": 10,
+    "name": "Swiftrag",
+    "description": "RAG in Swift for iOS/macOS + Ollama",
+    "repository": "https://github.com/DonTizi/Swiftrag",
+    "assetPath": "/assets/suggestions/10-swiftrag.json"
+  },
+  {
+    "rank": 11,
+    "name": "llama-cpp-swift",
+    "description": "Swift wrapper/client for llama.cpp",
+    "repository": "https://github.com/srgtuszy/llama-cpp-swift",
+    "assetPath": "/assets/suggestions/11-llama-cpp-swift.json"
+  },
+  {
+    "rank": 12,
+    "name": "volocal",
+    "description": "local voice/LLM app tooling (Swift)",
+    "repository": "https://github.com/fikrikarim/volocal",
+    "assetPath": "/assets/suggestions/12-volocal.json"
+  },
+  {
+    "rank": 13,
+    "name": "OpenVision",
+    "description": "Swift vision/AI app project",
+    "repository": "https://github.com/rayl15/OpenVision",
+    "assetPath": "/assets/suggestions/13-openvision.json"
+  },
+  {
+    "rank": 14,
+    "name": "ChatGPTSwiftUI",
+    "description": "SwiftUI ChatGPT app starter",
+    "repository": "https://github.com/alfianlosari/ChatGPTSwiftUI",
+    "assetPath": "/assets/suggestions/14-chatgptswiftui.json"
+  },
+  {
+    "rank": 15,
+    "name": "ChatGPTUI",
+    "description": "iOS ChatGPT UI sample",
+    "repository": "https://github.com/alfianlosari/ChatGPTUI",
+    "assetPath": "/assets/suggestions/15-chatgptui.json"
+  },
+  {
+    "rank": 16,
+    "name": "AICat",
+    "description": "AI chat iOS app repo",
+    "repository": "https://github.com/Panl/AICat",
+    "assetPath": "/assets/suggestions/16-aicat.json"
+  },
+  {
+    "rank": 17,
+    "name": "ChatGPT_Chatbot",
+    "description": "iOS chatbot app in Swift",
+    "repository": "https://github.com/motianjun4/ChatGPT_Chatbot",
+    "assetPath": "/assets/suggestions/17-chatgpt-chatbot.json"
+  },
+  {
+    "rank": 18,
+    "name": "GPTMessage",
+    "description": "iOS/macOS GPT chat app",
+    "repository": "https://github.com/lhuanyu/GPTMessage",
+    "assetPath": "/assets/suggestions/18-gptmessage.json"
+  },
+  {
+    "rank": 19,
+    "name": "GPTalks",
+    "description": "Swift AI chat app",
+    "repository": "https://github.com/SilverMarcs/GPTalks",
+    "assetPath": "/assets/suggestions/19-gptalks.json"
+  },
+  {
+    "rank": 20,
+    "name": "swiftchat",
+    "description": "Swift chat app with LLM backend support",
+    "repository": "https://github.com/zahidkhawaja/swiftchat",
+    "assetPath": "/assets/suggestions/20-swiftchat.json"
+  },
+  {
+    "rank": 21,
+    "name": "Ichi",
+    "description": "Swift iOS AI app project",
+    "repository": "https://github.com/rudrankriyam/Ichi",
+    "assetPath": "/assets/suggestions/21-ichi.json"
+  },
+  {
+    "rank": 22,
+    "name": "RLLM",
+    "description": "Swift LLM app/framework repo",
+    "repository": "https://github.com/DanielZhangyc/RLLM",
+    "assetPath": "/assets/suggestions/22-rllm.json"
+  },
+  {
+    "rank": 23,
+    "name": "eisonAI",
+    "description": "Swift AI iOS tooling",
+    "repository": "https://github.com/qoli/eisonAI",
+    "assetPath": "/assets/suggestions/23-eisonai.json"
+  },
+  {
+    "rank": 24,
+    "name": "xybrid",
+    "description": "mobile/on-device AI SDK (includes iOS)",
+    "repository": "https://github.com/xybrid-ai/xybrid",
+    "assetPath": "/assets/suggestions/24-xybrid.json"
+  },
+  {
+    "rank": 25,
+    "name": "Runanywhere SDKs",
+    "description": "local/mobile AI toolkit incl. Apple targets",
+    "repository": "https://github.com/RunanywhereAI/runanywhere-sdks",
+    "assetPath": "/assets/suggestions/25-runanywhere-sdks.json"
+  }
+]

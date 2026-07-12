@@ -1,0 +1,8 @@
+{
+  "rank": 3,
+  "name": "RFID 125kHz Reader",
+  "category": "rfid",
+  "description": "Read and store 125kHz RFID cards.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

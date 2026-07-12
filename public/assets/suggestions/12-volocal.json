@@ -1,0 +1,6 @@
+{
+  "rank": 12,
+  "name": "volocal",
+  "description": "local voice/LLM app tooling (Swift)",
+  "repository": "https://github.com/fikrikarim/volocal"
+}

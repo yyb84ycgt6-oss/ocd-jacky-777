@@ -1,0 +1,8 @@
+{
+  "rank": 28,
+  "name": "File Manager",
+  "category": "system",
+  "description": "Manage on-device saved files and folders.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

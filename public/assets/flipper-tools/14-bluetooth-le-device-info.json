@@ -1,0 +1,8 @@
+{
+  "rank": 14,
+  "name": "Bluetooth LE Device Info",
+  "category": "bluetooth",
+  "description": "Inspect BLE advertisement and device data.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

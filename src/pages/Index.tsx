@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import GeneralToolbox from "@/components/GeneralToolbox";
@@ -66,6 +67,14 @@ import {
 } from "@/lib/jackie-files";
 import AnimatedCanvas from "@/components/backgrounds/AnimatedCanvas";
 import NeutronBackgroundSettings, { loadNeutronSettings, type NeutronBackgroundSettings as NSSettings } from "@/components/backgrounds/NeutronBackgroundSettings";
+import { CompressionPod } from "@/components/CompressionPod";
+import {
+  COMPRESSION_PODS,
+  findSeedById,
+  findSeedPathById,
+  type CompressionSeed,
+} from "@/lib/compressionPods";
+import { matchCompressionSeeds, shouldAutoNavigate } from "@/lib/compressionMatcher";
 
 
 interface DisplayMessage {
@@ -531,7 +540,10 @@ const CORE_FILES = [
   "ROADMAP.md",
 ];
 
+const COMPRESSION_PATH_KEY = "jackie.compression.path.v1";
+
 const Index = () => {
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -548,6 +560,16 @@ const Index = () => {
   const [tagMap, setTagMap] = useState<Record<string, string[]>>({});
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
   const [rateLimitCooldown, setRateLimitCooldown] = useState(0);
+  const [compressionOpen, setCompressionOpen] = useState(false);
+  const [compressionPathIds, setCompressionPathIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(COMPRESSION_PATH_KEY);
+      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
   const [toolboxOpen, setToolboxOpen] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -562,6 +584,10 @@ const Index = () => {
   const dragCounter = useRef(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const compressionPath: CompressionSeed[] = compressionPathIds
+    .map((id) => findSeedById(id))
+    .filter((seed): seed is CompressionSeed => Boolean(seed));
 
   const loadTags = useCallback(async () => {
     try {
@@ -608,6 +634,18 @@ const Index = () => {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + "px";
     }
   }, [input]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COMPRESSION_PATH_KEY, JSON.stringify(compressionPathIds));
+    } catch {
+      // ignore
+    }
+  }, [compressionPathIds]);
+
+  useEffect(() => {
+    if (compressionPathIds.length > 0) setCompressionOpen(true);
+  }, []);
 
   const loadConversations = async (autoSelect = false) => {
     try {
@@ -689,6 +727,49 @@ const Index = () => {
       feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
     }, 50);
   };
+
+  const handleCompressionAction = useCallback((seed: CompressionSeed) => {
+    if (!seed.action) return;
+    navigate(seed.action.path);
+    toast.success(`Compression route: ${seed.label}`);
+    setCompressionOpen(false);
+  }, [navigate]);
+
+  const handleCompressionIntent = useCallback((text: string): boolean => {
+    const query = text.trim().toLowerCase();
+    if (!query) return false;
+
+    if (query === "pods" || query === "pod" || query === "open pods" || query === "compression") {
+      setCompressionOpen(true);
+      setCompressionPathIds([]);
+      return true;
+    }
+
+    const tokenCount = query.split(/\s+/).length;
+    const looksLikeIntent = tokenCount <= 4;
+    if (!looksLikeIntent) return false;
+
+    const ranked = matchCompressionSeeds(query, COMPRESSION_PODS);
+    if (ranked.length === 0) return false;
+
+    const best = ranked[0].seed;
+    const bestPath = findSeedPathById(best.id);
+
+    if (shouldAutoNavigate(query, ranked) && best.action) {
+      setCompressionPathIds(bestPath.map((s) => s.id));
+      handleCompressionAction(best);
+      return true;
+    }
+
+    setCompressionOpen(true);
+    if (best.children?.length) {
+      setCompressionPathIds(bestPath.map((s) => s.id));
+    } else {
+      setCompressionPathIds(bestPath.slice(0, -1).map((s) => s.id));
+    }
+    toast.info("Opened Compression Pod");
+    return true;
+  }, [handleCompressionAction]);
 
   // ── Slash Command Handler ──
   const handleSlashCommand = async (text: string, convId: string): Promise<string | null> => {
@@ -815,7 +896,7 @@ Provide your assessment in this structure:
 Keep it concise but thorough. No hype, no false alarm — just truth.`;
 
           const res = await fetch(
-            `https://rkwhhbxgjdpehfuxsult.supabase.co/functions/v1/jackie-chat`,
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jackie-chat`,
             {
               method: 'POST',
               headers: {
@@ -875,6 +956,10 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
     if ((!input.trim() && pendingFiles.length === 0) || isProcessing || rateLimitCooldown > 0) return;
 
     const userText = input.trim();
+    if (pendingFiles.length === 0 && !userText.startsWith("/") && handleCompressionIntent(userText)) {
+      setInput("");
+      return;
+    }
     const filesToUpload = [...pendingFiles];
     setInput("");
     setPendingFiles([]);
@@ -1236,6 +1321,18 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
         {/* Command input */}
         <div className="border-t border-border p-4 flex-shrink-0">
           <div className="max-w-[768px]">
+            {compressionOpen && (
+              <div className="mb-3">
+                <CompressionPod
+                  roots={COMPRESSION_PODS}
+                  path={compressionPath}
+                  onOpenSeed={(seed) => setCompressionPathIds((prev) => [...prev, seed.id])}
+                  onCollapseTo={(depth) => setCompressionPathIds((prev) => prev.slice(0, depth))}
+                  onCollapseRoot={() => setCompressionPathIds([])}
+                  onSelectAction={handleCompressionAction}
+                />
+              </div>
+            )}
             <ChatMediaBar
               pendingFiles={pendingFiles}
               onFilesAdded={(files) => setPendingFiles((prev) => [...prev, ...files])}
@@ -1243,6 +1340,16 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
               disabled={isProcessing}
             />
             <div className="flex items-end gap-2">
+              <button
+                onClick={() => {
+                  setCompressionOpen((v) => !v);
+                  if (!compressionOpen) setCompressionPathIds((prev) => prev);
+                }}
+                className="px-2 py-2 rounded-sm bg-secondary/60 text-xs font-mono text-muted-foreground hover:text-foreground btn-mechanical"
+                title="Toggle Compression Pod"
+              >
+                ◉
+              </button>
               <span className="font-mono text-xs text-muted-foreground select-none pb-3">›</span>
               <textarea
                 ref={textareaRef}
@@ -1250,38 +1357,40 @@ Keep it concise but thorough. No hype, no false alarm — just truth.`;
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
-                placeholder="..."
+                placeholder="Type intent (wallet, arena, guild) or chat..."
                 className="jackie-input flex-1 resize-none overflow-hidden"
                 style={{ minHeight: "44px", maxHeight: "200px" }}
                 disabled={isProcessing}
                 rows={1}
               />
-              <VoiceRecorder
-                onRecordingComplete={(file) => {
-                  const pf: PendingFile = {
-                    file,
-                    id: `${Date.now()}-voice`,
-                    preview: URL.createObjectURL(file),
-                  };
-                  setPendingFiles((prev) => [...prev, pf]);
-                }}
-                disabled={isProcessing}
-              />
-              {rateLimitCooldown > 0 ? (
-                <div className="p-3 rounded-sm bg-destructive/20 border border-destructive/40 text-destructive font-mono text-xs flex items-center gap-2 flex-shrink-0 animate-pulse">
-                  <Zap size={14} />
-                  {rateLimitCooldown}s
-                </div>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
-                  className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical flex-shrink-0"
-                  title="Send (Enter)"
-                >
-                  <Send size={16} />
-                </button>
-              )}
+              <div className="flex flex-col items-center gap-2 self-end flex-shrink-0">
+                <VoiceRecorder
+                  onRecordingComplete={(file) => {
+                    const pf: PendingFile = {
+                      file,
+                      id: `${Date.now()}-voice`,
+                      preview: URL.createObjectURL(file),
+                    };
+                    setPendingFiles((prev) => [...prev, pf]);
+                  }}
+                  disabled={isProcessing}
+                />
+                {rateLimitCooldown > 0 ? (
+                  <div className="p-3 rounded-sm bg-destructive/20 border border-destructive/40 text-destructive font-mono text-xs flex items-center gap-2 animate-pulse">
+                    <Zap size={14} />
+                    {rateLimitCooldown}s
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isProcessing || (!input.trim() && pendingFiles.length === 0)}
+                    className="p-3 rounded-sm bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30 transition-opacity btn-mechanical"
+                    title="Send (Enter)"
+                  >
+                    <Send size={16} />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between mt-1.5 ml-5">
               <div className="relative">

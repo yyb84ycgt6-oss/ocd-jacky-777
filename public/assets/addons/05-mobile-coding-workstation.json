@@ -1,0 +1,10 @@
+{
+  "rank": 5,
+  "name": "Mobile Coding Workstation",
+  "description": "Mobile-first coding workspace with AI assist and sync",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": true,
+    "cloud": true
+  }
+}

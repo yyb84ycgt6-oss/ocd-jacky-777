@@ -1,0 +1,16 @@
+{
+  "name": "Flipper Zero Widget Integration",
+  "version": "1.0.0",
+  "description": "Widget profile for Flipper Zero connectivity, cloud sync hooks, and LLM-assist command planning.",
+  "capabilities": {
+    "wifi": true,
+    "bluetooth": true,
+    "cloud": true,
+    "llmWidget": true
+  },
+  "notes": [
+    "Uses browser Bluetooth API for device selection when available.",
+    "Uses online/offline state for network/cloud routing awareness.",
+    "Can be extended to call your preferred local or cloud LLM endpoint."
+  ]
+}

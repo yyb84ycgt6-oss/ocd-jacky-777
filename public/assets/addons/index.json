@@ -1,0 +1,112 @@
+[
+  {
+    "rank": 1,
+    "name": "Cloud Multi-LLM Hub",
+    "description": "Unified cloud gateway for multiple LLM providers with fallback handling",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/01-cloud-multi-llm-hub.json"
+  },
+  {
+    "rank": 2,
+    "name": "Intelligent Model Router",
+    "description": "Policy-based model selection by latency, cost, and task type",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/02-intelligent-model-router.json"
+  },
+  {
+    "rank": 3,
+    "name": "iOS Shortcuts Agent Launcher",
+    "description": "Shortcut-triggered agent launch flows for iPhone automation",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/03-ios-shortcuts-agent-launcher.json"
+  },
+  {
+    "rank": 4,
+    "name": "Voice-Controlled Task Agent",
+    "description": "Speech-driven command routing for task execution",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": true,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/04-voice-controlled-task-agent.json"
+  },
+  {
+    "rank": 5,
+    "name": "Mobile Coding Workstation",
+    "description": "Mobile-first coding workspace with AI assist and sync",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": true,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/05-mobile-coding-workstation.json"
+  },
+  {
+    "rank": 6,
+    "name": "Research + Summarization Agent Pipeline",
+    "description": "Crawler + summarizer pipeline for research workflows",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/06-research-summarization-agent-pipeline.json"
+  },
+  {
+    "rank": 7,
+    "name": "Personal Knowledge RAG Agent",
+    "description": "Private document indexing and retrieval-augmented responses",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/07-personal-knowledge-rag-agent.json"
+  },
+  {
+    "rank": 8,
+    "name": "Email/Calendar/Task Triage Agent",
+    "description": "Inbox and schedule triage with prioritized actions",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/08-email-calendar-task-triage-agent.json"
+  },
+  {
+    "rank": 9,
+    "name": "Content Production Agent Pipeline",
+    "description": "Automated draft/review/publish workflow for content",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/09-content-production-agent-pipeline.json"
+  },
+  {
+    "rank": 10,
+    "name": "Private Secure AI Gateway",
+    "description": "Secure private gateway for identity, routing, and policy controls",
+    "requirements": {
+      "wifi": true,
+      "bluetooth": false,
+      "cloud": true
+    },
+    "assetPath": "/assets/addons/10-private-secure-ai-gateway.json"
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "rank": 21,
+  "name": "SPI Bus Probe",
+  "category": "gpio",
+  "description": "Probe SPI communication lines.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

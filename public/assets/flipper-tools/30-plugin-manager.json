@@ -1,0 +1,8 @@
+{
+  "rank": 30,
+  "name": "Plugin Manager",
+  "category": "system",
+  "description": "Enable/disable and organize installed plugins.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

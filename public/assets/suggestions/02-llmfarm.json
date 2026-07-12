@@ -1,0 +1,6 @@
+{
+  "rank": 2,
+  "name": "LLMFarm",
+  "description": "on-device LLM framework for Apple devices",
+  "repository": "https://github.com/guinmoon/LLMFarm"
+}

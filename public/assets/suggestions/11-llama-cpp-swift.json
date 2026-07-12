@@ -1,0 +1,6 @@
+{
+  "rank": 11,
+  "name": "llama-cpp-swift",
+  "description": "Swift wrapper/client for llama.cpp",
+  "repository": "https://github.com/srgtuszy/llama-cpp-swift"
+}

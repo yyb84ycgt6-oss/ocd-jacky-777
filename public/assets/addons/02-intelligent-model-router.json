@@ -1,0 +1,10 @@
+{
+  "rank": 2,
+  "name": "Intelligent Model Router",
+  "description": "Policy-based model selection by latency, cost, and task type",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

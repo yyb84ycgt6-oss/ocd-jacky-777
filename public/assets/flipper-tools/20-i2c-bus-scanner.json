@@ -1,0 +1,8 @@
+{
+  "rank": 20,
+  "name": "I2C Bus Scanner",
+  "category": "gpio",
+  "description": "Detect devices on connected I2C bus.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

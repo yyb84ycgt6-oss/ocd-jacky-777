@@ -1,0 +1,10 @@
+{
+  "rank": 1,
+  "name": "Cloud Multi-LLM Hub",
+  "description": "Unified cloud gateway for multiple LLM providers with fallback handling",
+  "requirements": {
+    "wifi": true,
+    "bluetooth": false,
+    "cloud": true
+  }
+}

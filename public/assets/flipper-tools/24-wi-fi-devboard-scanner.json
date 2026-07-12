@@ -1,0 +1,8 @@
+{
+  "rank": 24,
+  "name": "Wi-Fi Devboard Scanner",
+  "category": "wifi",
+  "description": "Scan networks with supported Wi-Fi devboard add-on.",
+  "integratedInWidget": true,
+  "integratedInFlipperTool": true
+}

@@ -1,0 +1,6 @@
+{
+  "rank": 9,
+  "name": "LocalLLMClient",
+  "description": "Swift local LLM client",
+  "repository": "https://github.com/tattn/LocalLLMClient"
+}

@@ -54,52 +54,94 @@ serve(async (req) => {
       });
     }
 
-    const { goal, agentId } = await req.json();
+    const { goal, agentId, systemPrompt, agentStyle, maxSteps } = await req.json();
     if (!goal || typeof goal !== "string") {
       return new Response(JSON.stringify({ error: "Goal required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-    const sys = "You are G-UNIT, an AI agent execution system. Be precise, tactical, and thorough.";
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const allowedStyles = new Set(["tactical", "creative", "conservative", "analytic"]);
+    const requestedStyle = typeof agentStyle === "string" ? agentStyle.trim().toLowerCase() : "";
+    const style = allowedStyles.has(requestedStyle) ? requestedStyle : "tactical";
+    const customSystem = typeof systemPrompt === "string" && systemPrompt.trim()
+      ? systemPrompt.trim().slice(0, 2000)
+      : "";
+    const steps = Number.isFinite(Number(maxSteps))
+      ? Math.min(8, Math.max(3, Math.floor(Number(maxSteps))))
+      : 4;
+    const sys = customSystem || `You are G-UNIT, an AI agent execution system. Be precise, ${style}, and thorough.`;
+
+    const agentFilter = agentId && typeof agentId === "string" ? agentId : null;
+
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Update agent status
-    if (agentId) {
-      const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-      await admin.from("gunit_agents").update({ status: "active", last_run_at: new Date().toISOString() }).eq("id", agentId);
+    if (agentFilter) {
+      await admin
+        .from("gunit_agents")
+        .update({ status: "active", last_run_at: new Date().toISOString() })
+        .eq("id", agentFilter)
+        .eq("user_id", user.id);
     }
 
-    // Step 1: Plan
-    const plan = await callAI(LOVABLE_API_KEY, sys, `Create a detailed execution plan for this goal: "${goal}". List 3-5 concrete steps.`);
+    try {
+      // Step 1: Plan
+      const plan = await callAI(
+        LOVABLE_API_KEY,
+        sys,
+        `Create a detailed execution plan for this goal: "${goal}". List ${Math.max(3, steps - 1)}-${steps} concrete steps.`,
+      );
 
-    // Step 2: Execute
-    const execution = await callAI(LOVABLE_API_KEY, sys, `Execute this plan step by step and describe the results:\n\nGoal: ${goal}\nPlan: ${plan}`);
+      // Step 2: Execute
+      const execution = await callAI(
+        LOVABLE_API_KEY,
+        sys,
+        `Execute this plan step by step and describe the results:\n\nGoal: ${goal}\nPlan: ${plan}`,
+      );
 
-    // Step 3: Analyze
-    const analysis = await callAI(LOVABLE_API_KEY, sys, `Analyze the execution results. Identify strengths, weaknesses, and gaps:\n\nGoal: ${goal}\nExecution: ${execution}`);
+      // Step 3: Analyze
+      const analysis = await callAI(
+        LOVABLE_API_KEY,
+        sys,
+        `Analyze the execution results. Identify strengths, weaknesses, and gaps:\n\nGoal: ${goal}\nExecution: ${execution}`,
+      );
 
-    // Step 4: Improve + Score
-    const improvement = await callAI(LOVABLE_API_KEY, sys, `Based on this analysis, provide specific improvements and score the overall result from 1-10. End your response with exactly "SCORE: X" where X is 1-10.\n\nGoal: ${goal}\nAnalysis: ${analysis}`);
+      // Step 4: Improve + Score
+      const improvement = await callAI(
+        LOVABLE_API_KEY,
+        sys,
+        `Based on this analysis, provide specific improvements and score the overall result from 1-10. End your response with exactly "SCORE: X" where X is 1-10.\n\nGoal: ${goal}\nAnalysis: ${analysis}`,
+      );
 
-    // Extract score
-    const scoreMatch = improvement.match(/SCORE:\s*(\d+)/i);
-    const score = scoreMatch ? Math.min(10, Math.max(0, parseInt(scoreMatch[1]))) : 5;
+      // Extract score
+      const scoreMatch = improvement.match(/SCORE:\s*(\d+)/i);
+      const score = scoreMatch ? Math.min(10, Math.max(0, parseInt(scoreMatch[1]))) : 5;
 
-    // Save improvement
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    await admin.from("gunit_improvements").insert({
-      user_id: user.id, goal, execution, analysis, improvement, score,
-    });
+      // Save improvement
+      await admin.from("gunit_improvements").insert({
+        user_id: user.id, goal, execution, analysis, improvement, score,
+      });
 
-    // Reset agent status
-    if (agentId) {
-      await admin.from("gunit_agents").update({ status: "idle" }).eq("id", agentId);
+      return new Response(JSON.stringify({ plan, execution, analysis, improvement, score }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } finally {
+      if (agentFilter) {
+        await admin
+          .from("gunit_agents")
+          .update({ status: "idle" })
+          .eq("id", agentFilter)
+          .eq("user_id", user.id);
+      }
     }
-
-    return new Response(JSON.stringify({ plan, execution, analysis, improvement, score }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     const status = msg === "RATE_LIMITED" ? 429 : msg === "CREDITS_EXHAUSTED" ? 402 : 500;

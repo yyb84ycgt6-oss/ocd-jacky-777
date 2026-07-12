@@ -26,6 +26,9 @@ export default function GunitAgents() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [newName, setNewName] = useState("");
   const [goal, setGoal] = useState("");
+  const [agentStyle, setAgentStyle] = useState("tactical");
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [maxSteps, setMaxSteps] = useState(4);
   const [runningId, setRunningId] = useState<string | null>(null);
   const [result, setResult] = useState<CycleResult | null>(null);
 
@@ -63,7 +66,13 @@ export default function GunitAgents() {
 
     try {
       const { data, error } = await supabase.functions.invoke("gunit-agent-cycle", {
-        body: { goal: goal.trim(), agentId },
+        body: {
+          goal: goal.trim(),
+          agentId,
+          agentStyle,
+          systemPrompt: systemPrompt.trim() || undefined,
+          maxSteps,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -106,6 +115,33 @@ export default function GunitAgents() {
           placeholder="Optimize user onboarding flow for higher conversion..."
           className="w-full bg-[#050508] border border-[#ffffff10] rounded px-3 py-2 font-mono text-xs text-[#c0c0c0] placeholder:text-[#404040] focus:outline-none focus:border-[#00ff8830]"
         />
+        <div className="grid md:grid-cols-3 gap-2 mt-3">
+          <select
+            value={agentStyle}
+            onChange={(e) => setAgentStyle(e.target.value)}
+            className="bg-[#050508] border border-[#ffffff10] rounded px-3 py-2 font-mono text-xs text-[#c0c0c0] focus:outline-none focus:border-[#00ff8830]"
+          >
+            <option value="tactical">TACTICAL</option>
+            <option value="creative">CREATIVE</option>
+            <option value="conservative">CONSERVATIVE</option>
+            <option value="analytic">ANALYTIC</option>
+          </select>
+          <input
+            type="number"
+            min={3}
+            max={8}
+            value={maxSteps}
+            onChange={(e) => setMaxSteps(Math.min(8, Math.max(3, Number(e.target.value) || 4)))}
+            className="bg-[#050508] border border-[#ffffff10] rounded px-3 py-2 font-mono text-xs text-[#c0c0c0] focus:outline-none focus:border-[#00ff8830]"
+            placeholder="Max steps"
+          />
+          <input
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            placeholder="Optional system prompt override..."
+            className="bg-[#050508] border border-[#ffffff10] rounded px-3 py-2 font-mono text-xs text-[#c0c0c0] placeholder:text-[#404040] focus:outline-none focus:border-[#00ff8830]"
+          />
+        </div>
       </div>
 
       {/* Agent List */}

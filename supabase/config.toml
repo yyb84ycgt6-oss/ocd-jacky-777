@@ -2,3 +2,6 @@ project_id = "rkwhhbxgjdpehfuxsult"
 
 [functions.jackie-chat]
 verify_jwt = false
+
+[functions.music-generate]
+verify_jwt = false
