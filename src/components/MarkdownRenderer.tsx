@@ -124,7 +124,12 @@ function MermaidDiagram({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const id = useMemo(() => `mermaid-${Math.random().toString(36).slice(2, 9)}`, []);
+  const id = useMemo(() => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `mermaid-${crypto.randomUUID()}`;
+    }
+    return `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -279,10 +284,12 @@ function ChartVisualizer({ code }: { code: string }) {
       const normalizedData: ChartDataItem[] = parsed.data
         .map((item): ChartDataItem | null => {
           if (!isRecord(item)) return null;
+          const value = item.value;
+          if (typeof value !== "number" || !Number.isFinite(value)) return null;
           return {
             label: typeof item.label === "string" ? item.label : undefined,
             name: typeof item.name === "string" ? item.name : undefined,
-            value: typeof item.value === "number" ? item.value : 0,
+            value,
           };
         })
         .filter((item): item is ChartDataItem => item !== null);
