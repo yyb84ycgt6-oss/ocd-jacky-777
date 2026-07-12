@@ -22,14 +22,16 @@ type ChartData = {
   data: ChartDataItem[];
 };
 
-let mermaidIdCounter = 0;
-
 function createMermaidId(): string {
-  mermaidIdCounter += 1;
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `mermaid-${crypto.randomUUID()}-${mermaidIdCounter}`;
+    return `mermaid-${crypto.randomUUID()}`;
   }
-  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${mermaidIdCounter}`;
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint32Array(2);
+    crypto.getRandomValues(bytes);
+    return `mermaid-${bytes[0].toString(36)}${bytes[1].toString(36)}`;
+  }
+  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 // ─── Copy Button ──────────────────────────────────────────
@@ -134,11 +136,10 @@ function MermaidDiagram({ code }: { code: string }) {
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
-  const idRef = useRef<string>(createMermaidId());
+  const [id] = useState(createMermaidId);
 
   useEffect(() => {
     let cancelled = false;
-    const id = idRef.current;
     const timer = setTimeout(async () => {
       try {
         const { default: mermaid } = await import("mermaid");
@@ -167,7 +168,7 @@ function MermaidDiagram({ code }: { code: string }) {
       }
     }, 50); // Small delay to ensure DOM is ready
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [code]);
+  }, [code, id]);
 
   if (error) {
     return (
@@ -328,7 +329,7 @@ function ChartVisualizer({ code }: { code: string }) {
         {chartData.data.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">
-              {item.label || item.name || "Unnamed item"}
+              {item.label || item.name || "Unlabeled"}
             </span>
             <div className="flex-1 h-6 bg-secondary/30 rounded overflow-hidden">
               <div
