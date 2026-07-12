@@ -26,7 +26,7 @@ function createMermaidId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return `mermaid-${crypto.randomUUID()}`;
   }
-  return `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 // ─── Copy Button ──────────────────────────────────────────
@@ -324,7 +324,9 @@ function ChartVisualizer({ code }: { code: string }) {
       <div className="p-4 space-y-2">
         {chartData.data.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">{item.label || item.name}</span>
+            <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">
+              {item.label || item.name || `Item ${i + 1}`}
+            </span>
             <div className="flex-1 h-6 bg-secondary/30 rounded overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-primary to-primary/60 rounded transition-all duration-500"
