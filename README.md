@@ -64,6 +64,12 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## Local AI copilot with Ollama
+
+If you want to use your own local/server models for coding support, see:
+
+- [Ollama Copilot Setup](/docs/ollama-copilot-setup.md)
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
