@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Sandbox from "./pages/Sandbox";
 import { SandboxBanner } from "./components/SandboxBanner";
+import FreeModelHub from "./components/FreeModelHub";
 
 import Play from "./pages/Play";
 import TelegramShell from "./pages/TelegramShell";
@@ -71,6 +72,7 @@ const App = () => (
             <Sonner />
           <BrowserRouter>
             <SandboxBanner />
+            <FreeModelHub />
             <SandboxCatcher>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
