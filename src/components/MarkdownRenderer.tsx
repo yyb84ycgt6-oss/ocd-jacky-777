@@ -8,6 +8,20 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+type ChartDataItem = {
+  label?: string;
+  name?: string;
+  value: number;
+};
+
+type ChartData = {
+  title?: string;
+  data: ChartDataItem[];
+};
+
 // ─── Copy Button ──────────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
@@ -138,7 +152,7 @@ function MermaidDiagram({ code }: { code: string }) {
           document.getElementById("d" + id)?.remove();
         }
       } catch (error: unknown) {
-        if (!cancelled) setError(getErrorMessage(error) || "Failed to render diagram");
+        if (!cancelled) setError(getErrorMessage(error));
       }
     }, 50); // Small delay to ensure DOM is ready
     return () => { cancelled = true; clearTimeout(timer); };
@@ -257,20 +271,6 @@ function JsonVisualizer({ code }: { code: string }) {
 // ─── Chart Visualizer (for ```chart blocks) ───────────────
 
 function ChartVisualizer({ code }: { code: string }) {
-  type ChartDataItem = {
-    label?: string;
-    name?: string;
-    value: number;
-  };
-
-  type ChartData = {
-    title?: string;
-    data: ChartDataItem[];
-  };
-
-  const isRecord = (value: unknown): value is Record<string, unknown> =>
-    typeof value === "object" && value !== null;
-
   const chartData = useMemo(() => {
     try {
       const parsed = JSON.parse(code);
