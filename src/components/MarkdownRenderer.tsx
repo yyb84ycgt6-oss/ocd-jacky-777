@@ -22,11 +22,14 @@ type ChartData = {
   data: ChartDataItem[];
 };
 
+let mermaidIdCounter = 0;
+
 function createMermaidId(): string {
+  mermaidIdCounter += 1;
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `mermaid-${crypto.randomUUID()}`;
+    return `mermaid-${crypto.randomUUID()}-${mermaidIdCounter}`;
   }
-  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return `mermaid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${mermaidIdCounter}`;
 }
 
 // ─── Copy Button ──────────────────────────────────────────
@@ -132,10 +135,10 @@ function MermaidDiagram({ code }: { code: string }) {
   const [error, setError] = useState<string>("");
   const [expanded, setExpanded] = useState(false);
   const idRef = useRef<string>(createMermaidId());
-  const id = idRef.current;
 
   useEffect(() => {
     let cancelled = false;
+    const id = idRef.current;
     const timer = setTimeout(async () => {
       try {
         const { default: mermaid } = await import("mermaid");
@@ -164,7 +167,7 @@ function MermaidDiagram({ code }: { code: string }) {
       }
     }, 50); // Small delay to ensure DOM is ready
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [code, id]);
+  }, [code]);
 
   if (error) {
     return (
@@ -325,7 +328,7 @@ function ChartVisualizer({ code }: { code: string }) {
         {chartData.data.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <span className="text-xs font-mono text-muted-foreground w-24 truncate text-right">
-              {item.label || item.name || `Item ${i + 1}`}
+              {item.label || item.name || "Unnamed item"}
             </span>
             <div className="flex-1 h-6 bg-secondary/30 rounded overflow-hidden">
               <div
