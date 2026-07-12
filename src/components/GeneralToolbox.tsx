@@ -495,8 +495,8 @@ echo ""
         }
 
         // Return formatted echo lines
-        const logId = `[#\${id}] ${name}`;
-        const logDesc = desc.replace(/"/g, '\\"');
+        const logId = `[#${id}] ${name}`;
+        const logDesc = desc.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
         const logUrl = `URL: ${url}`;
 
         return `echo "${logId} - ${logDesc}"\n` +
