@@ -38,6 +38,32 @@ export interface VaultCategory {
   createdAt: string;
 }
 
+// ── Mini Applications (Wave 2) ──
+export interface MiniManifest {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  icon: string;
+  model_id?: string; // e.g., 'all-MiniLM-L6-v2@v2.1'
+  tokenizer_hash?: string; // SHA256 of tokenizer
+  storage_version: number; // appStorage version compatibility
+  mass_cost: number; // Sovereign Engine cost to activate
+  permissions: ('microphone' | 'clipboard' | 'notifications' | 'storage' | 'network')[];
+  category_id?: string; // Link to VaultCategory
+  active: boolean; // Is this mini in the 12-slot dock?
+  created_at: string;
+  updated_at: string;
+}
+
+export const MINI_PERMISSIONS = [
+  'microphone',
+  'clipboard',
+  'notifications',
+  'storage',
+  'network',
+] as const;
+
 // ── Core Data Models ──
 export interface MediaItem {
   id: string;
