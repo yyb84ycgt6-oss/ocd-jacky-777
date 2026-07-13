@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, Upload, FolderOpen, Layers, Settings, ArrowLeft } from 'lucide-react';
+import { Home, Upload, FolderOpen, Layers, Settings, Menu, X } from 'lucide-react';
 import { VaultDashboard } from './pages/VaultDashboard';
 import { ImportScreen } from './pages/ImportScreen';
 import { LibraryScreen } from './pages/LibraryScreen';
@@ -21,6 +21,7 @@ interface NavigationState {
 
 export function VaultShell() {
   const [nav, setNav] = useState<NavigationState>({ page: 'dashboard' });
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigate = (page: string, data?: any) => {
     setNav({
@@ -28,6 +29,10 @@ export function VaultShell() {
       item: data?.item,
       jobId: data?.jobId,
     });
+    // Auto-close sidebar on mobile after navigation
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const goBack = () => setNav({ page: 'dashboard' });
@@ -83,32 +88,77 @@ export function VaultShell() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto px-4 pt-4 pb-20">
-        {renderPage()}
-      </main>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar Navigation - Collapsible */}
+      <aside
+        className={`${
+          sidebarOpen ? 'w-56' : 'w-16'
+        } bg-card border-r border-border flex flex-col transition-all duration-200 ease-out fixed left-0 top-0 h-screen z-40 safe-area-left`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-3 border-b border-border">
+          {sidebarOpen && (
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-mono font-bold text-primary">J</span>
+              <span className="text-xs font-mono uppercase tracking-wider text-foreground">Vault</span>
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 hover:bg-secondary rounded-md transition-colors"
+          >
+            {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        </div>
 
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50 safe-area-bottom">
-        <div className="flex items-center justify-around max-w-lg mx-auto">
+        {/* Nav Items */}
+        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-2">
           {tabs.map(({ key, icon: Icon, label }) => {
             const active = nav.page === key;
             return (
               <button
                 key={key}
-                onClick={() => setNav({ page: key })}
-                className={`flex flex-col items-center gap-0.5 py-2 px-3 min-h-[52px] min-w-[52px] transition-colors ${
-                  active ? 'text-primary' : 'text-muted-foreground'
+                onClick={() => navigate(key)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm font-mono uppercase tracking-wider ${
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground hover:bg-secondary'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[9px] font-mono uppercase tracking-wider">{label}</span>
+                <Icon className="w-5 h-5 shrink-0" />
+                {sidebarOpen && <span>{label}</span>}
               </button>
             );
           })}
+        </nav>
+
+        {/* Footer Status */}
+        {sidebarOpen && (
+          <div className="p-3 border-t border-border text-[10px] font-mono text-muted-foreground space-y-1">
+            <div>Status: Ready</div>
+            <div>Synced</div>
+          </div>
+        )}
+      </aside>
+
+      {/* Main Content - Full Height */}
+      <main
+        className={`${
+          sidebarOpen ? 'ml-56' : 'ml-16'
+        } flex-1 overflow-y-auto transition-all duration-200 ease-out safe-area-right safe-area-bottom`}
+      >
+        <div className="min-h-screen px-4 py-4">
+          {renderPage()}
         </div>
-      </nav>
+      </main>
+
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 md:hidden z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
