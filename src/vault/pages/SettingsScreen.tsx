@@ -1,10 +1,11 @@
-import { ArrowLeft, Shield, Eye, Lock, FileCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Shield, Eye, Lock, FileCheck, AlertTriangle, Tag } from 'lucide-react';
 
 interface SettingsScreenProps {
   onBack: () => void;
+  onNavigate?: (page: string, data?: any) => void;
 }
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onNavigate }: SettingsScreenProps) {
   return (
     <div className="space-y-5 pb-8">
       <div className="flex items-center gap-3">
@@ -43,6 +44,22 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Organization */}
+      <div className="space-y-2">
+        <h2 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Organization</h2>
+        <button
+          onClick={() => onNavigate?.('categories')}
+          className="w-full p-3 border border-border rounded-sm bg-card hover:bg-accent transition-colors flex items-center gap-3"
+        >
+          <Tag className="w-4 h-4 text-primary" />
+          <div className="text-left flex-1">
+            <p className="text-sm text-foreground font-medium">Manage Categories</p>
+            <p className="text-[11px] text-muted-foreground">Create and customize categories for your media</p>
+          </div>
+          <span className="text-xs text-muted-foreground">→</span>
+        </button>
       </div>
 
       {/* Privacy & Security */}

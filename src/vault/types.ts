@@ -28,6 +28,16 @@ export type JobAction =
 
 export type LibraryTab = 'all' | 'assets' | 'references' | 'outputs' | 'jobs';
 
+// ── Custom Categories ──
+export interface VaultCategory {
+  id: string;
+  name: string;
+  icon: string; // Lucide icon name or emoji (e.g., 'shield-check', '📦')
+  color: string; // Hex color (e.g., '#FF5733')
+  borderColor?: string; // Optional distinct border color
+  createdAt: string;
+}
+
 // ── Core Data Models ──
 export interface MediaItem {
   id: string;
@@ -47,6 +57,7 @@ export interface MediaItem {
   tags: string[];
   notes: string;
   projectId?: string;
+  categoryId?: string; // Link to custom VaultCategory
   isFavorite: boolean;
   createdAt: string;
   updatedAt: string;

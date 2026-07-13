@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { ArrowLeft, Search, Grid3X3, List, Heart } from 'lucide-react';
 import { MediaCard } from '../components/MediaCard';
 import { EmptyState } from '../components/EmptyState';
-import { MOCK_MEDIA_ITEMS } from '../mockData';
 import { libraryService } from '../services';
+import { useVault } from '../VaultContext';
 import type { MediaItem, LibraryTab } from '../types';
 
 interface LibraryScreenProps {
@@ -20,15 +20,23 @@ const TABS: { key: LibraryTab; label: string }[] = [
 ];
 
 export function LibraryScreen({ onBack, onSelectItem }: LibraryScreenProps) {
+  const { state, updateMediaItem } = useVault();
   const [tab, setTab] = useState<LibraryTab>('all');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [items, setItems] = useState(MOCK_MEDIA_ITEMS);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const filtered = libraryService.filterItems(items, tab, search, []);
+  // Filter by tab, search, and custom category
+  let filtered = libraryService.filterItems(state.media, tab, search, []);
+  if (selectedCategory) {
+    filtered = filtered.filter(item => item.categoryId === selectedCategory);
+  }
 
-  const toggleFavorite = (id: string) => {
-    setItems(prev => prev.map(i => i.id === id ? { ...i, isFavorite: !i.isFavorite } : i));
+  const toggleFavorite = async (id: string) => {
+    const item = state.media.find(i => i.id === id);
+    if (item) {
+      await updateMediaItem(id, { isFavorite: !item.isFavorite });
+    }
   };
 
   return (
@@ -67,14 +75,37 @@ export function LibraryScreen({ onBack, onSelectItem }: LibraryScreenProps) {
         {TABS.map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => {
+              setTab(t.key);
+              setSelectedCategory(null);
+            }}
             className={`px-3 py-2 text-[10px] font-mono uppercase tracking-wider whitespace-nowrap rounded-sm transition-colors min-h-[44px] ${
-              tab === t.key
+              tab === t.key && !selectedCategory
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
             }`}
           >
             {t.label}
+          </button>
+        ))}
+
+        {/* Custom Category Tabs */}
+        {state.categories.map(cat => (
+          <button
+            key={cat.id}
+            onClick={() => {
+              setTab('all');
+              setSelectedCategory(cat.id);
+            }}
+            className={`px-3 py-2 text-[10px] font-mono uppercase tracking-wider whitespace-nowrap rounded-sm transition-colors min-h-[44px] flex items-center gap-1 ${
+              selectedCategory === cat.id
+                ? 'text-primary-foreground'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+            }`}
+            style={selectedCategory === cat.id ? { backgroundColor: cat.color, color: '#fff' } : {}}
+          >
+            <span>{cat.icon}</span>
+            <span>{cat.name}</span>
           </button>
         ))}
       </div>

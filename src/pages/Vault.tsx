@@ -1,5 +1,10 @@
 import { VaultShell } from '@/vault/VaultShell';
+import { VaultProvider } from '@/vault/VaultContext';
 
 export default function Vault() {
-  return <VaultShell />;
+  return (
+    <VaultProvider>
+      <VaultShell />
+    </VaultProvider>
+  );
 }

@@ -8,9 +8,10 @@ import { JobBuilder } from './pages/JobBuilder';
 import { QueueScreen } from './pages/QueueScreen';
 import { OutputReview } from './pages/OutputReview';
 import { SettingsScreen } from './pages/SettingsScreen';
+import { CategoriesManager } from './pages/CategoriesManager';
 import type { MediaItem } from './types';
 
-type VaultPage = 'dashboard' | 'import' | 'library' | 'detail' | 'convert' | 'queue' | 'output' | 'settings';
+type VaultPage = 'dashboard' | 'import' | 'library' | 'detail' | 'convert' | 'queue' | 'output' | 'settings' | 'categories';
 
 interface NavigationState {
   page: VaultPage;
@@ -65,7 +66,9 @@ export function VaultShell() {
       case 'output':
         return <OutputReview jobId={nav.jobId || ''} onBack={() => navigate('queue')} />;
       case 'settings':
-        return <SettingsScreen onBack={goBack} />;
+        return <SettingsScreen onBack={goBack} onNavigate={navigate} />;
+      case 'categories':
+        return <CategoriesManager onBack={() => navigate('settings')} />;
       default:
         return <VaultDashboard onNavigate={navigate} />;
     }

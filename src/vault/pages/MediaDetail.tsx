@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Play, Clock, HardDrive, Tag, Pencil, Trash2, ArrowRight, AlertCircle } from 'lucide-react';
 import { SourceBadge } from '../components/SourceBadge';
 import { MediaStatusBadge } from '../components/StatusBadge';
+import { useVault } from '../VaultContext';
 import { formatDuration, formatFileSize, isProcessableSource, type MediaItem } from '../types';
 
 interface MediaDetailProps {
@@ -11,7 +12,9 @@ interface MediaDetailProps {
 }
 
 export function MediaDetail({ item, onBack, onConvert }: MediaDetailProps) {
+  const { state, updateMediaItem } = useVault();
   const [notes, setNotes] = useState(item.notes);
+  const [selectedCategory, setSelectedCategory] = useState(item.categoryId || '');
   const canProcess = isProcessableSource(item.sourceType);
   const isVideo = item.mimeType.startsWith('video/');
   const isAudio = item.mimeType.startsWith('audio/');
@@ -65,6 +68,28 @@ export function MediaDetail({ item, onBack, onConvert }: MediaDetailProps) {
         <SourceBadge sourceType={item.sourceType} size="md" />
         <MediaStatusBadge status={item.status} />
       </div>
+
+      {/* Category */}
+      {state.categories.length > 0 && (
+        <div className="space-y-1">
+          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Category</label>
+          <select
+            value={selectedCategory}
+            onChange={async (e) => {
+              setSelectedCategory(e.target.value);
+              await updateMediaItem(item.id, { categoryId: e.target.value || undefined });
+            }}
+            className="w-full px-3 py-2 bg-input border border-border rounded-sm text-sm text-foreground focus:outline-none focus:border-primary/50"
+          >
+            <option value="">No category</option>
+            {state.categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.icon} {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Reference warning */}
       {!canProcess && (

@@ -1,5 +1,6 @@
 import { Heart, Play, Clock, HardDrive, MoreVertical } from 'lucide-react';
 import { SourceBadge } from './SourceBadge';
+import { useVault } from '../VaultContext';
 import { formatDuration, formatFileSize, type MediaItem } from '../types';
 
 interface MediaCardProps {
@@ -9,9 +10,11 @@ interface MediaCardProps {
 }
 
 export function MediaCard({ item, onSelect, onFavorite }: MediaCardProps) {
+  const { state } = useVault();
   const isRef = item.sourceType === 'external_reference_only';
   const isVideo = item.mimeType.startsWith('video/');
   const isAudio = item.mimeType.startsWith('audio/');
+  const category = item.categoryId ? state.categories.find(c => c.id === item.categoryId) : null;
 
   return (
     <button
@@ -58,7 +61,18 @@ export function MediaCard({ item, onSelect, onFavorite }: MediaCardProps) {
           )}
         </div>
 
-        <SourceBadge sourceType={item.sourceType} />
+        <div className="flex gap-2">
+          <SourceBadge sourceType={item.sourceType} />
+          {category && (
+            <span
+              className="px-2 py-1 text-[9px] font-mono uppercase tracking-wider rounded-sm text-white flex items-center gap-1"
+              style={{ backgroundColor: category.color }}
+            >
+              <span>{category.icon}</span>
+              <span>{category.name}</span>
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground">
           {item.fileSize > 0 && (
