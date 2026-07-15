@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { MediaItem, ConversionJob, OutputAsset, VaultProject, VaultCategory, MiniManifest } from './types';
 import { appStorage } from './storage/appStorageV2';
 import { podCustodian, PodCustodian } from './minis/PodCustodian';
+import { timeTravel } from './storage/timeTravel';
 import { MOCK_MEDIA_ITEMS, MOCK_JOBS, MOCK_PROJECTS, MOCK_OUTPUTS } from './mockData';
 
 interface VaultState {
@@ -32,6 +33,10 @@ interface VaultContextType {
   toggleMiniActive: (miniId: string) => Promise<void>;
   removeMini: (miniId: string) => Promise<void>;
   burnMass: (amount: number) => Promise<boolean>;
+  // Wave 3: Time Travel
+  getHistory: () => Promise<any[]>;
+  replayTo: (timestamp: number) => Promise<any>;
+  verifyIntegrity: () => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
 }
@@ -117,9 +122,20 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   };
 
   const updateMediaItem = async (id: string, updates: Partial<MediaItem>) => {
+    const oldItem = state.media.find(m => m.id === id);
     const updated = state.media.map(m =>
       m.id === id ? { ...m, ...updates, updatedAt: new Date().toISOString() } : m
     );
+
+    // TimeTravel: Record change
+    if (oldItem) {
+      const newItem = updated.find(m => m.id === id);
+      await timeTravel.commit('UPDATE', `media[${id}]`, oldItem, newItem, USERID, {
+        source: 'user',
+        tags: ['media', 'update'],
+      });
+    }
+
     await saveState({ ...state, media: updated, lastModified: Date.now() });
   };
 
@@ -145,6 +161,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   };
 
   const addCategory = async (category: VaultCategory) => {
+    // TimeTravel: Record creation
+    await timeTravel.commit('CREATE', `categories[${category.id}]`, null, category, USERID, {
+      source: 'user',
+      tags: ['category', 'create'],
+    });
+
     await saveState({ ...state, categories: [...state.categories, category], lastModified: Date.now() });
   };
 
@@ -215,6 +237,19 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
+  // Wave 3: Time Travel Methods
+  const getHistory = async () => {
+    return timeTravel.getHistory('main');
+  };
+
+  const replayTo = async (timestamp: number) => {
+    return timeTravel.replayTo(timestamp, 'main');
+  };
+
+  const verifyIntegrity = async () => {
+    return timeTravel.verifyIntegrity('main');
+  };
+
   return (
     <VaultContext.Provider
       value={{
@@ -233,6 +268,9 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         toggleMiniActive,
         removeMini,
         burnMass,
+        getHistory,
+        replayTo,
+        verifyIntegrity,
         isLoading,
         error,
       }}
